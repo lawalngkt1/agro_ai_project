@@ -205,3 +205,6 @@ This project integrates:
 # 📄 License
 
 This project is for academic and research purposes.
+
+### reference link
+https://chatgpt.com/c/69e9c8a5-5ed8-83ea-b5e1-e92a9acf6764
