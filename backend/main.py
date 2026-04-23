@@ -5,6 +5,14 @@ from app.core.exceptions import global_exception_handler
 from app.routes import crop, soil, plant, explain
 
 app = FastAPI(title="AgroAI API", version="1.0.0")
+from fastapi import FastAPI
+
+app = FastAPI()
+
+# Health check route
+@app.get("/health")
+def health_check():
+	return {"status": "ok"}
 
 add_cors(app)
 
