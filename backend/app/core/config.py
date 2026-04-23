@@ -8,6 +8,6 @@ class Settings:
     VERSION = "1.0.0"
 
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-    DB_NAME = "agroai_db"
+    DB_NAME = "agroai"
 
 settings = Settings()
