@@ -1,0 +1,38 @@
+[
+  {
+    "soil_type": "Sandy",
+    "N": 20,
+    "P": 10,
+    "K": 15,
+    "ph": 6.5,
+    "moisture": 12,
+    "note": "Low water retention, fast drainage"
+  },
+  {
+    "soil_type": "Clay",
+    "N": 40,
+    "P": 35,
+    "K": 30,
+    "ph": 5.8,
+    "moisture": 45,
+    "note": "High nutrient retention, poor drainage"
+  },
+  {
+    "soil_type": "Loamy",
+    "N": 50,
+    "P": 45,
+    "K": 40,
+    "ph": 6.8,
+    "moisture": 30,
+    "note": "Best soil type for agriculture"
+  },
+  {
+    "soil_type": "Silty",
+    "N": 35,
+    "P": 25,
+    "K": 20,
+    "ph": 6.2,
+    "moisture": 35,
+    "note": "Fertile but prone to compaction"
+  }
+]
