@@ -51,7 +51,8 @@ export default function SoilResultModal({
   onClose,
   soilType,
   metrics,
-  note,
+    note,
+  overallScore
 }: Props) {
   if (!open) return null;
 
@@ -147,6 +148,62 @@ export default function SoilResultModal({
               {note}
             </p>
           </div>
+
+          {typeof overallScore === "number" && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                padding: "14px",
+                marginBottom: 18,
+                borderRadius: 12,
+                backgroundColor: "rgba(13,148,136,0.06)",
+                border: "1px solid rgba(13,148,136,0.15)",
+              }}
+            >
+              {/* Circle Score */}
+              <div
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: "50%",
+                  background:
+                    overallScore >= 70
+                      ? "linear-gradient(135deg, #16a34a, #4ade80)"
+                      : overallScore >= 40
+                        ? "linear-gradient(135deg, #d97706, #fbbf24)"
+                        : "linear-gradient(135deg, #dc2626, #f87171)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  fontWeight: 800,
+                  fontSize: 18,
+                }}
+              >
+                {overallScore}%
+              </div>
+
+              {/* Label */}
+              <div>
+                <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>
+                  Soil Health Score
+                </h4>
+                <p
+                  style={{ margin: "4px 0 0", fontSize: 12, color: "#4b7a75" }}
+                >
+                  {overallScore >= 80
+                    ? "Excellent soil condition"
+                    : overallScore >= 60
+                      ? "Good condition"
+                      : overallScore >= 40
+                        ? "Moderate issues"
+                        : "Poor soil health"}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* METRICS (OPTIONAL) */}
           {metrics && (
