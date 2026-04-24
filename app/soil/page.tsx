@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import SoilResultModal from '@/components/SoilResultModal';
 import { FlaskConical, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Droplets, ChevronLeft, Info, ChartBar as BarChart3, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface SoilForm {
@@ -139,6 +140,8 @@ export default function SoilPage() {
   const [apiResult, setApiResult] = useState<string | null>(null);
   const [localMetrics, setLocalMetrics] = useState<SoilMetric[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [note, setNote] = useState("");
 
   const handleChange = (key: keyof SoilForm, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -147,6 +150,15 @@ export default function SoilPage() {
       setApiResult(null);
       setLocalMetrics(null);
     }
+  };
+
+  const generateSoilNote = (result: string, metrics?: any) => {
+    if (metrics) {
+      const issues = metrics.filter((m: any) => m.status !== "optimal");
+      if (issues.length === 0) return "Your soil is in good condition.";
+      return `Improve: ${issues.map((i: any) => i.label).join(", ")}.`;
+    }
+    return `Detected soil type is ${result}. Manage nutrients and irrigation properly.`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -177,11 +189,28 @@ export default function SoilPage() {
 
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
       const data = await response.json();
-      setApiResult(data.soil_type || data.prediction || data.result || JSON.stringify(data));
+      const result =
+        data.soil_type || data.prediction || data.result || "Unknown";
+
+      setApiResult(result);
+
+      // generate note
+      setNote(generateSoilNote(result));
+
+      // open modal
+      setModalOpen(true);
+
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       if (message.includes('fetch') || message.includes('network') || message.includes('Failed')) {
-        setLocalMetrics(analyzeSoil(form));
+        const metrics = analyzeSoil(form);
+        setLocalMetrics(metrics);
+
+        // generate note
+        setNote(generateSoilNote("Soil Analysis", metrics));
+
+        // open modal
+        setModalOpen(true);
       } else {
         setError(message);
       }
@@ -195,28 +224,29 @@ export default function SoilPage() {
     : null;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fdf9' }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "#f8fdf9" }}>
       <Navbar />
 
       <div style={{ paddingTop: 88, paddingBottom: 60 }}>
         {/* Page header */}
         <div
           style={{
-            background: 'linear-gradient(160deg, #f0fdf4 0%, #ccfbf1 60%, #f8fdf9 100%)',
-            padding: '40px 24px 48px',
-            borderBottom: '1px solid rgba(13,148,136,0.1)',
+            background:
+              "linear-gradient(160deg, #f0fdf4 0%, #ccfbf1 60%, #f8fdf9 100%)",
+            padding: "40px 24px 48px",
+            borderBottom: "1px solid rgba(13,148,136,0.1)",
           }}
         >
-          <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
             <Link
               href="/"
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
+                display: "inline-flex",
+                alignItems: "center",
                 gap: 6,
                 fontSize: 13,
-                color: '#4b7a79',
-                textDecoration: 'none',
+                color: "#4b7a79",
+                textDecoration: "none",
                 marginBottom: 20,
                 fontWeight: 500,
               }}
@@ -225,50 +255,89 @@ export default function SoilPage() {
               Back to Home
             </Link>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                marginBottom: 12,
+              }}
+            >
               <div
                 style={{
                   width: 52,
                   height: 52,
                   borderRadius: 14,
-                  background: 'linear-gradient(135deg, #0d9488 0%, #34d399 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 16px rgba(13,148,136,0.28)',
+                  background:
+                    "linear-gradient(135deg, #0d9488 0%, #34d399 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 4px 16px rgba(13,148,136,0.28)",
                 }}
               >
                 <FlaskConical size={24} color="#fff" />
               </div>
               <div>
-                <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f3d38', letterSpacing: '-0.6px', margin: 0 }}>
+                <h1
+                  style={{
+                    fontSize: 28,
+                    fontWeight: 800,
+                    color: "#0f3d38",
+                    letterSpacing: "-0.6px",
+                    margin: 0,
+                  }}
+                >
                   Soil Analysis
                 </h1>
-                <p style={{ color: '#2d6b64', fontSize: 14, margin: 0, marginTop: 4 }}>
-                  Evaluate your soil health and receive actionable improvement recommendations.
+                <p
+                  style={{
+                    color: "#2d6b64",
+                    fontSize: 14,
+                    margin: 0,
+                    marginTop: 4,
+                  }}
+                >
+                  Evaluate your soil health and receive actionable improvement
+                  recommendations.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div style={{ maxWidth: 800, margin: '0 auto', padding: '36px 24px 0' }}>
+        <div
+          style={{ maxWidth: 800, margin: "0 auto", padding: "36px 24px 0" }}
+        >
           {/* Info banner */}
           <div
             style={{
-              display: 'flex',
-              alignItems: 'flex-start',
+              display: "flex",
+              alignItems: "flex-start",
               gap: 10,
-              padding: '14px 18px',
+              padding: "14px 18px",
               borderRadius: 10,
-              backgroundColor: 'rgba(13,148,136,0.07)',
-              border: '1px solid rgba(13,148,136,0.15)',
+              backgroundColor: "rgba(13,148,136,0.07)",
+              border: "1px solid rgba(13,148,136,0.15)",
               marginBottom: 28,
             }}
           >
-            <Info size={16} color="#0d9488" style={{ marginTop: 1, flexShrink: 0 }} />
-            <p style={{ fontSize: 13, color: '#0f6b62', margin: 0, lineHeight: 1.5 }}>
-              Submit your soil parameters to receive a comprehensive health assessment with nutrient status and targeted improvement recommendations.
+            <Info
+              size={16}
+              color="#0d9488"
+              style={{ marginTop: 1, flexShrink: 0 }}
+            />
+            <p
+              style={{
+                fontSize: 13,
+                color: "#0f6b62",
+                margin: 0,
+                lineHeight: 1.5,
+              }}
+            >
+              Submit your soil parameters to receive a comprehensive health
+              assessment with nutrient status and targeted improvement
+              recommendations.
             </p>
           </div>
 
@@ -276,21 +345,29 @@ export default function SoilPage() {
           <form onSubmit={handleSubmit}>
             <div
               style={{
-                backgroundColor: '#fff',
+                backgroundColor: "#fff",
                 borderRadius: 20,
-                border: '1px solid rgba(13,148,136,0.12)',
-                boxShadow: '0 4px 24px rgba(13,148,136,0.07)',
-                padding: '32px',
+                border: "1px solid rgba(13,148,136,0.12)",
+                boxShadow: "0 4px 24px rgba(13,148,136,0.07)",
+                padding: "32px",
                 marginBottom: 20,
               }}
             >
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f3d38', marginBottom: 24, marginTop: 0 }}>
+              <h2
+                style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: "#0f3d38",
+                  marginBottom: 24,
+                  marginTop: 0,
+                }}
+              >
                 Soil Parameters
               </h2>
               <div
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
                   gap: 20,
                 }}
               >
@@ -299,18 +376,27 @@ export default function SoilPage() {
                     <label
                       htmlFor={field.key}
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
+                        display: "flex",
+                        alignItems: "center",
                         gap: 6,
                         fontSize: 13,
                         fontWeight: 600,
-                        color: '#1a3a35',
+                        color: "#1a3a35",
                         marginBottom: 6,
                       }}
                     >
                       <field.icon size={13} color={field.color} />
                       {field.label}
-                      <span style={{ fontSize: 11, color: '#5a9c93', fontWeight: 400, marginLeft: 2 }}>({field.unit})</span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: "#5a9c93",
+                          fontWeight: 400,
+                          marginLeft: 2,
+                        }}
+                      >
+                        ({field.unit})
+                      </span>
                     </label>
                     <input
                       id={field.key}
@@ -322,19 +408,29 @@ export default function SoilPage() {
                       value={form[field.key]}
                       onChange={(e) => handleChange(field.key, e.target.value)}
                       style={{
-                        width: '100%',
-                        padding: '10px 14px',
+                        width: "100%",
+                        padding: "10px 14px",
                         borderRadius: 9,
-                        border: `1.5px solid ${form[field.key] ? 'rgba(13,148,136,0.35)' : 'rgba(13,148,136,0.15)'}`,
-                        backgroundColor: form[field.key] ? 'rgba(13,148,136,0.03)' : '#fff',
+                        border: `1.5px solid ${form[field.key] ? "rgba(13,148,136,0.35)" : "rgba(13,148,136,0.15)"}`,
+                        backgroundColor: form[field.key]
+                          ? "rgba(13,148,136,0.03)"
+                          : "#fff",
                         fontSize: 14,
-                        color: '#1a2e2c',
-                        outline: 'none',
-                        transition: 'all 0.15s ease',
-                        boxSizing: 'border-box',
+                        color: "#1a2e2c",
+                        outline: "none",
+                        transition: "all 0.15s ease",
+                        boxSizing: "border-box",
                       }}
                     />
-                    <p style={{ fontSize: 11, color: '#5a9c93', margin: '4px 0 0' }}>{field.hint}</p>
+                    <p
+                      style={{
+                        fontSize: 11,
+                        color: "#5a9c93",
+                        margin: "4px 0 0",
+                      }}
+                    >
+                      {field.hint}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -343,18 +439,31 @@ export default function SoilPage() {
             {error && (
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
+                  display: "flex",
+                  alignItems: "flex-start",
                   gap: 10,
-                  padding: '14px 18px',
+                  padding: "14px 18px",
                   borderRadius: 10,
-                  backgroundColor: 'rgba(239,68,68,0.07)',
-                  border: '1px solid rgba(239,68,68,0.2)',
+                  backgroundColor: "rgba(239,68,68,0.07)",
+                  border: "1px solid rgba(239,68,68,0.2)",
                   marginBottom: 16,
                 }}
               >
-                <AlertCircle size={16} color="#dc2626" style={{ marginTop: 1, flexShrink: 0 }} />
-                <p style={{ fontSize: 14, color: '#dc2626', margin: 0, lineHeight: 1.5 }}>{error}</p>
+                <AlertCircle
+                  size={16}
+                  color="#dc2626"
+                  style={{ marginTop: 1, flexShrink: 0 }}
+                />
+                <p
+                  style={{
+                    fontSize: 14,
+                    color: "#dc2626",
+                    margin: 0,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {error}
+                </p>
               </div>
             )}
 
@@ -362,26 +471,31 @@ export default function SoilPage() {
               type="submit"
               disabled={loading}
               style={{
-                width: '100%',
-                padding: '14px',
+                width: "100%",
+                padding: "14px",
                 borderRadius: 10,
                 fontSize: 15,
                 fontWeight: 700,
-                color: '#fff',
-                background: loading ? '#5eead4' : 'linear-gradient(135deg, #0d9488 0%, #34d399 100%)',
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                color: "#fff",
+                background: loading
+                  ? "#5eead4"
+                  : "linear-gradient(135deg, #0d9488 0%, #34d399 100%)",
+                border: "none",
+                cursor: loading ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 gap: 10,
-                boxShadow: loading ? 'none' : '0 4px 20px rgba(13,148,136,0.3)',
-                transition: 'all 0.2s ease',
+                boxShadow: loading ? "none" : "0 4px 20px rgba(13,148,136,0.3)",
+                transition: "all 0.2s ease",
               }}
             >
               {loading ? (
                 <>
-                  <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                  <Loader2
+                    size={18}
+                    style={{ animation: "spin 1s linear infinite" }}
+                  />
                   Analyzing Soil...
                 </>
               ) : (
@@ -398,29 +512,47 @@ export default function SoilPage() {
             <div
               style={{
                 marginTop: 28,
-                backgroundColor: '#fff',
+                backgroundColor: "#fff",
                 borderRadius: 20,
-                border: '1.5px solid rgba(13,148,136,0.25)',
-                boxShadow: '0 8px 32px rgba(13,148,136,0.12)',
-                overflow: 'hidden',
-                animation: 'scaleIn 0.35s ease-out',
+                border: "1.5px solid rgba(13,148,136,0.25)",
+                boxShadow: "0 8px 32px rgba(13,148,136,0.12)",
+                overflow: "hidden",
+                animation: "scaleIn 0.35s ease-out",
               }}
             >
               <div
                 style={{
-                  background: 'linear-gradient(135deg, #0d9488 0%, #34d399 100%)',
-                  padding: '24px 28px',
-                  display: 'flex',
-                  alignItems: 'center',
+                  background:
+                    "linear-gradient(135deg, #0d9488 0%, #34d399 100%)",
+                  padding: "24px 28px",
+                  display: "flex",
+                  alignItems: "center",
                   gap: 12,
                 }}
               >
                 <CheckCircle2 size={22} color="#fff" />
                 <div>
-                  <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
+                  <p
+                    style={{
+                      color: "rgba(255,255,255,0.75)",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      margin: 0,
+                    }}
+                  >
                     Soil Classification
                   </p>
-                  <h3 style={{ color: '#fff', fontSize: 22, fontWeight: 800, margin: '4px 0 0', textTransform: 'capitalize' }}>
+                  <h3
+                    style={{
+                      color: "#fff",
+                      fontSize: 22,
+                      fontWeight: 800,
+                      margin: "4px 0 0",
+                      textTransform: "capitalize",
+                    }}
+                  >
                     {apiResult}
                   </h3>
                 </div>
@@ -430,18 +562,18 @@ export default function SoilPage() {
 
           {/* Local metrics */}
           {localMetrics && (
-            <div style={{ marginTop: 28, animation: 'scaleIn 0.35s ease-out' }}>
+            <div style={{ marginTop: 28, animation: "scaleIn 0.35s ease-out" }}>
               {/* Score card */}
               <div
                 style={{
-                  backgroundColor: '#fff',
+                  backgroundColor: "#fff",
                   borderRadius: 20,
-                  border: '1px solid rgba(13,148,136,0.15)',
-                  boxShadow: '0 4px 24px rgba(13,148,136,0.08)',
-                  padding: '24px 28px',
+                  border: "1px solid rgba(13,148,136,0.15)",
+                  boxShadow: "0 4px 24px rgba(13,148,136,0.08)",
+                  padding: "24px 28px",
                   marginBottom: 16,
-                  display: 'flex',
-                  alignItems: 'center',
+                  display: "flex",
+                  alignItems: "center",
                   gap: 20,
                 }}
               >
@@ -449,37 +581,60 @@ export default function SoilPage() {
                   style={{
                     width: 72,
                     height: 72,
-                    borderRadius: '50%',
-                    background: overallScore! >= 70
-                      ? 'linear-gradient(135deg, #16a34a 0%, #4ade80 100%)'
-                      : overallScore! >= 40
-                      ? 'linear-gradient(135deg, #d97706 0%, #fbbf24 100%)'
-                      : 'linear-gradient(135deg, #dc2626 0%, #f87171 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    borderRadius: "50%",
+                    background:
+                      overallScore! >= 70
+                        ? "linear-gradient(135deg, #16a34a 0%, #4ade80 100%)"
+                        : overallScore! >= 40
+                          ? "linear-gradient(135deg, #d97706 0%, #fbbf24 100%)"
+                          : "linear-gradient(135deg, #dc2626 0%, #f87171 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     flexShrink: 0,
-                    boxShadow: '0 4px 16px rgba(13,148,136,0.2)',
+                    boxShadow: "0 4px 16px rgba(13,148,136,0.2)",
                   }}
                 >
-                  <span style={{ fontSize: 22, fontWeight: 800, color: '#fff' }}>{overallScore}%</span>
+                  <span
+                    style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}
+                  >
+                    {overallScore}%
+                  </span>
                 </div>
                 <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f3d38', margin: 0 }}>Soil Health Score</h3>
-                  <p style={{ fontSize: 14, color: '#2d6b64', margin: '4px 0 0', lineHeight: 1.5 }}>
+                  <h3
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 800,
+                      color: "#0f3d38",
+                      margin: 0,
+                    }}
+                  >
+                    Soil Health Score
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: 14,
+                      color: "#2d6b64",
+                      margin: "4px 0 0",
+                      lineHeight: 1.5,
+                    }}
+                  >
                     {overallScore! >= 80
-                      ? 'Excellent soil health. Maintain current practices.'
+                      ? "Excellent soil health. Maintain current practices."
                       : overallScore! >= 60
-                      ? 'Good soil health with minor improvements needed.'
-                      : overallScore! >= 40
-                      ? 'Moderate issues detected. Address the flagged parameters.'
-                      : 'Multiple deficiencies detected. Immediate action recommended.'}
+                        ? "Good soil health with minor improvements needed."
+                        : overallScore! >= 40
+                          ? "Moderate issues detected. Address the flagged parameters."
+                          : "Multiple deficiencies detected. Immediate action recommended."}
                   </p>
                 </div>
               </div>
 
               {/* Metrics */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              >
                 {localMetrics.map((metric) => {
                   const cfg = statusConfig[metric.status];
                   const Icon = cfg.icon;
@@ -487,14 +642,14 @@ export default function SoilPage() {
                     <div
                       key={metric.label}
                       style={{
-                        backgroundColor: '#fff',
+                        backgroundColor: "#fff",
                         borderRadius: 14,
                         border: `1px solid ${cfg.border}`,
-                        padding: '16px 20px',
-                        display: 'flex',
+                        padding: "16px 20px",
+                        display: "flex",
                         gap: 16,
-                        alignItems: 'flex-start',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                        alignItems: "flex-start",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                       }}
                     >
                       <div
@@ -504,36 +659,76 @@ export default function SoilPage() {
                           borderRadius: 10,
                           backgroundColor: cfg.bg,
                           border: `1px solid ${cfg.border}`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                           flexShrink: 0,
                         }}
                       >
                         <Icon size={16} color={cfg.color} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8 }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: '#1a2e2c' }}>{metric.label}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: cfg.color }}>{metric.value}</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            marginBottom: 4,
+                            flexWrap: "wrap",
+                            gap: 8,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: "#1a2e2c",
+                            }}
+                          >
+                            {metric.label}
+                          </span>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 700,
+                                color: cfg.color,
+                              }}
+                            >
+                              {metric.value}
+                            </span>
                             <span
                               style={{
                                 fontSize: 11,
                                 fontWeight: 700,
                                 color: cfg.color,
                                 backgroundColor: cfg.bg,
-                                padding: '2px 8px',
+                                padding: "2px 8px",
                                 borderRadius: 100,
                                 border: `1px solid ${cfg.border}`,
-                                letterSpacing: '0.4px',
+                                letterSpacing: "0.4px",
                               }}
                             >
                               {cfg.label}
                             </span>
                           </div>
                         </div>
-                        <p style={{ fontSize: 13, color: '#4b7a75', margin: 0, lineHeight: 1.5 }}>{metric.recommendation}</p>
+                        <p
+                          style={{
+                            fontSize: 13,
+                            color: "#4b7a75",
+                            margin: 0,
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {metric.recommendation}
+                        </p>
                       </div>
                     </div>
                   );
@@ -549,6 +744,15 @@ export default function SoilPage() {
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         input:focus { border-color: rgba(13,148,136,0.55) !important; box-shadow: 0 0 0 3px rgba(13,148,136,0.1); }
       `}</style>
+
+      <SoilResultModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        soilType={apiResult}
+        metrics={localMetrics}
+        note={note}
+        overallScore={overallScore} // ✅ ADD THIS
+      />
     </div>
   );
 }
