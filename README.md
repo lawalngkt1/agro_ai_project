@@ -24,7 +24,6 @@ An AI-powered agricultural decision support system that helps farmers and users:
 ## ☁️ Backend API
 - Flask REST API
 - JSON-based communication
-- Deployable on cloud (Render/Railway)
 
 ## 🌍 Offline Support
 - Cached predictions
