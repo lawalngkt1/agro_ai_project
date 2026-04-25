@@ -91,25 +91,6 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* CTA */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="hidden md:flex">
-          <Link
-            href="/crop"
-            style={{
-              padding: '8px 20px',
-              borderRadius: 8,
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#fff',
-              background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
-              textDecoration: 'none',
-              boxShadow: '0 2px 12px rgba(22,163,74,0.28)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            Get Started
-          </Link>
-        </div>
 
         {/* Mobile toggle */}
         <button
@@ -168,24 +149,6 @@ export default function Navbar() {
               </Link>
             );
           })}
-          <Link
-            href="/crop"
-            onClick={() => setMobileOpen(false)}
-            style={{
-              display: 'block',
-              textAlign: 'center',
-              marginTop: 8,
-              padding: '11px 20px',
-              borderRadius: 8,
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#fff',
-              background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
-              textDecoration: 'none',
-            }}
-          >
-            Get Started
-          </Link>
         </div>
       )}
     </nav>
