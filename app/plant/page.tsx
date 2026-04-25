@@ -9,61 +9,13 @@ import { ScanLine, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as
 
 interface DetectionResult {
   name: string;
+  scientificName?: string;
+  family?: string;
   confidence?: number;
   type: 'healthy' | 'disease' | 'unknown';
   description?: string;
   treatment?: string;
-}
-
-const diseaseInfo: Record<string, DetectionResult> = {
-  'healthy': {
-    name: 'Healthy Plant',
-    type: 'healthy',
-    description: 'Your plant appears to be in excellent health with no visible signs of disease or stress.',
-    treatment: 'Continue with regular care: consistent watering, appropriate fertilization, and periodic monitoring.',
-  },
-  'bacterial blight': {
-    name: 'Bacterial Blight',
-    type: 'disease',
-    description: 'Water-soaked lesions that turn brown, often with yellow halos on leaves.',
-    treatment: 'Remove infected tissue, apply copper-based bactericide, improve air circulation.',
-  },
-  'leaf rust': {
-    name: 'Leaf Rust',
-    type: 'disease',
-    description: 'Orange-brown pustules on the underside of leaves caused by fungal pathogens.',
-    treatment: 'Apply systemic fungicide, remove infected leaves, avoid overhead irrigation.',
-  },
-  'powdery mildew': {
-    name: 'Powdery Mildew',
-    type: 'disease',
-    description: 'White powdery coating on leaf surfaces caused by fungal infection.',
-    treatment: 'Apply sulfur-based or neem oil spray. Improve ventilation and reduce humidity.',
-  },
-  'early blight': {
-    name: 'Early Blight',
-    type: 'disease',
-    description: 'Dark, concentric lesions on older leaves with yellowing around spots.',
-    treatment: 'Apply chlorothalonil fungicide, remove infected lower leaves, mulch around base.',
-  },
-};
-
-function parseResult(raw: string): DetectionResult {
-  const key = raw.toLowerCase().trim();
-  const known = diseaseInfo[key];
-  if (known) return known;
-
-  const isHealthy = key.includes('healthy') || key.includes('normal');
-  return {
-    name: raw,
-    type: isHealthy ? 'healthy' : 'disease',
-    description: isHealthy
-      ? 'Your plant appears to be in good health.'
-      : `Detected condition: ${raw}. Consult a local agricultural extension service for treatment.`,
-    treatment: isHealthy
-      ? 'Maintain current care practices.'
-      : 'Consult a local agronomist or agricultural extension service for specific treatment guidance.',
-  };
+  commonNames?: string[];
 }
 
 export default function PlantPage() {
@@ -125,27 +77,62 @@ export default function PlantPage() {
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('image', selectedFile);
+      const apiKey = process.env.NEXT_PUBLIC_PLANTNET_API_KEY;
+      if (!apiKey) {
+        throw new Error('PlantNet API key is missing. Please check your environment variables.');
+      }
 
-      const response = await fetch(`${API_BASE_URL}/plant/predict`, {
+      const formData = new FormData();
+      formData.append('images', selectedFile);
+      formData.append('organs', 'leaf');
+
+      const project = 'all';
+      const apiUrl = `https://my-api.plantnet.org/v2/identify/${project}?api-key=${apiKey}`;
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Server error: ${response.status}`);
+        throw new Error(errData.message || `API error: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      const raw = data.detected_disease || "Unknown";
+      const bestMatch = data.results?.[0];
+
+      if (!bestMatch) {
+        throw new Error('No plant matches found. Please try another image.');
+      }
+
+      const species = bestMatch.species;
+      const scientificName = species?.scientificNameWithoutAuthor || "Unknown";
+      const commonNames = species?.commonNames || [];
+      const family = species?.family?.scientificNameWithoutAuthor || "Unknown";
+      const confidence = Math.round(bestMatch.score * 100);
+      const mainCommonName = commonNames.length > 0 ? commonNames[0] : scientificName;
+
+      const detectionResult: DetectionResult = {
+        name: mainCommonName,
+        scientificName,
+        family,
+        confidence,
+        type: 'healthy',
+        commonNames,
+        description: `Identified as ${mainCommonName} (${scientificName}) from the ${family} family.`,
+        treatment: 'This identification is based on visual similarity. For accurate disease diagnosis, please consult a specialist if symptoms are present.'
+      };
+
+      setResult(detectionResult);
+      setPredictionTitle(mainCommonName);
       
-      const parsed = parseResult(String(raw));
-      setResult(parsed);
-      setPredictionTitle(parsed.name);
-      setNote(data.ai_summary || parsed.description || "");
-      setHausaNote(data.ai_summary_hausa || "");
+      const summary = `Species: ${mainCommonName} (${scientificName}). Family: ${family}. Confidence: ${confidence}%. Common names: ${commonNames.join(", ")}.`;
+      setNote(summary);
+      
+      const hausaSummary = `Wannan shuka ita ce ${mainCommonName}. Sunan kimiyya: ${scientificName}. Tana cikin iyalin ${family}. Tabbacinmu kashi ${confidence}% ne.`;
+      setHausaNote(hausaSummary);
+      
       setModalOpen(true);
 
     } catch (err: unknown) {
