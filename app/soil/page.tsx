@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { processSoilAnalysis } from '@/lib/analysis-rules';
+import { SOIL_VALIDATION_RULES, validateField } from '@/lib/validation-rules';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import SharedResultModal, { Metric, ProcessingOverlay } from '@/components/SharedResultModal';
@@ -32,8 +33,6 @@ const fields = [
     icon: FlaskConical,
     hint: 'Available nitrogen in soil',
     color: '#16a34a',
-    min: 0,
-    max: 200,
   },
   {
     key: 'phosphorus' as keyof SoilForm,
@@ -43,8 +42,6 @@ const fields = [
     icon: FlaskConical,
     hint: 'Available phosphorus',
     color: '#0d9488',
-    min: 0,
-    max: 200,
   },
   {
     key: 'potassium' as keyof SoilForm,
@@ -54,8 +51,6 @@ const fields = [
     icon: FlaskConical,
     hint: 'Available potassium',
     color: '#15803d',
-    min: 0,
-    max: 300,
   },
   {
     key: 'ph' as keyof SoilForm,
@@ -65,8 +60,6 @@ const fields = [
     icon: BarChart3,
     hint: 'Ideal range: 5.5 – 7.5',
     color: '#7c3aed',
-    min: 0,
-    max: 14,
   },
   {
     key: 'moisture' as keyof SoilForm,
@@ -76,8 +69,6 @@ const fields = [
     icon: Droplets,
     hint: 'Volumetric water content',
     color: '#0284c7',
-    min: 0,
-    max: 100,
   },
 ];
 
@@ -145,9 +136,15 @@ export default function SoilPage() {
   const [note, setNote] = useState("");
   const [hausaNote, setHausaNote] = useState("");
   const [overallScore, setOverallScore] = useState<number | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({});
 
   const handleChange = (key: keyof SoilForm, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    
+    // Real-time validation
+    const errorMsg = validateField(value, SOIL_VALIDATION_RULES[key]);
+    setFieldErrors(prev => ({ ...prev, [key]: errorMsg }));
+
     if (error) setError(null);
     if (apiResult || metrics) {
       setApiResult(null);
@@ -173,6 +170,23 @@ export default function SoilPage() {
     const values = Object.values(form);
     if (values.some((v) => v.trim() === '')) {
       setError('Please fill in all fields before submitting.');
+      return;
+    }
+
+    // Check for validation errors
+    const currentErrors: Record<string, string | null> = {};
+    let hasErrors = false;
+    (Object.keys(form) as Array<keyof SoilForm>).forEach(key => {
+      const err = validateField(form[key], SOIL_VALIDATION_RULES[key]);
+      if (err) {
+        currentErrors[key] = err;
+        hasErrors = true;
+      }
+    });
+
+    if (hasErrors) {
+      setFieldErrors(currentErrors);
+      setError('Please fix the errors in the form.');
       return;
     }
 
@@ -387,8 +401,6 @@ export default function SoilPage() {
                       id={field.key}
                       type="number"
                       step="any"
-                      min={field.min}
-                      max={field.max}
                       placeholder={field.placeholder}
                       value={form[field.key]}
                       onChange={(e) => handleChange(field.key, e.target.value)}
@@ -396,10 +408,8 @@ export default function SoilPage() {
                         width: "100%",
                         padding: "10px 14px",
                         borderRadius: 9,
-                        border: `1.5px solid ${form[field.key] ? "rgba(13,148,136,0.35)" : "rgba(13,148,136,0.15)"}`,
-                        backgroundColor: form[field.key]
-                          ? "rgba(13,148,136,0.03)"
-                          : "#fff",
+                        border: `1.5px solid ${fieldErrors[field.key] ? "#ef4444" : (form[field.key] ? "rgba(13,148,136,0.35)" : "rgba(13,148,136,0.15)")}`,
+                        backgroundColor: fieldErrors[field.key] ? "rgba(239,68,68,0.02)" : (form[field.key] ? "rgba(13,148,136,0.03)" : "#fff"),
                         fontSize: 14,
                         color: "#1a2e2c",
                         outline: "none",
@@ -407,15 +417,14 @@ export default function SoilPage() {
                         boxSizing: "border-box",
                       }}
                     />
-                    <p
-                      style={{
-                        fontSize: 11,
-                        color: "#5a9c93",
-                        margin: "4px 0 0",
-                      }}
-                    >
-                      {field.hint}
-                    </p>
+                    {fieldErrors[field.key] ? (
+                      <p style={{ fontSize: 11, color: "#ef4444", marginTop: 4, margin: "4px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
+                        <AlertCircle size={10} />
+                        {fieldErrors[field.key]}
+                      </p>
+                    ) : (
+                      <p style={{ fontSize: 11, color: "#5a9c93", margin: "4px 0 0" }}>{field.hint}</p>
+                    )}
                   </div>
                 ))}
               </div>

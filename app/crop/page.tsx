@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { processCropAnalysis } from '@/lib/analysis-rules';
+import { CROP_VALIDATION_RULES, validateField } from '@/lib/validation-rules';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import SharedResultModal, { Metric, ProcessingOverlay } from '@/components/SharedResultModal';
@@ -119,9 +120,15 @@ export default function CropPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [note, setNote] = useState("");
   const [hausaNote, setHausaNote] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({});
 
   const handleChange = (key: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    
+    // Real-time validation
+    const errorMsg = validateField(value, CROP_VALIDATION_RULES[key]);
+    setFieldErrors(prev => ({ ...prev, [key]: errorMsg }));
+
     if (error) setError(null);
     if (result) setResult(null);
   };
@@ -134,6 +141,23 @@ export default function CropPage() {
     const values = Object.values(form);
     if (values.some((v) => v.trim() === '')) {
       setError('Please fill in all fields before submitting.');
+      return;
+    }
+
+    // Check for validation errors
+    const currentErrors: Record<string, string | null> = {};
+    let hasErrors = false;
+    (Object.keys(form) as Array<keyof FormState>).forEach(key => {
+      const err = validateField(form[key], CROP_VALIDATION_RULES[key]);
+      if (err) {
+        currentErrors[key] = err;
+        hasErrors = true;
+      }
+    });
+
+    if (hasErrors) {
+      setFieldErrors(currentErrors);
+      setError('Please fix the errors in the form.');
       return;
     }
 
@@ -298,17 +322,24 @@ export default function CropPage() {
                           width: '100%',
                           padding: '10px 14px',
                           borderRadius: 9,
-                          border: `1.5px solid ${form[field.key] ? 'rgba(22,163,74,0.35)' : 'rgba(22,163,74,0.15)'}`,
-                          backgroundColor: form[field.key] ? 'rgba(22,163,74,0.03)' : '#fff',
+                          border: `1.5px solid ${fieldErrors[field.key] ? '#ef4444' : (form[field.key] ? 'rgba(22,163,74,0.35)' : 'rgba(22,163,74,0.15)')}`,
+                          backgroundColor: fieldErrors[field.key] ? 'rgba(239,68,68,0.02)' : (form[field.key] ? 'rgba(22,163,74,0.03)' : '#fff'),
                           fontSize: 14,
                           color: '#1a2e20',
                           outline: 'none',
-                          transition: 'border-color 0.15s ease',
+                          transition: 'all 0.15s ease',
                           boxSizing: 'border-box',
                         }}
                       />
                     </div>
-                    <p style={{ fontSize: 11, color: '#7aab84', marginTop: 4, margin: '4px 0 0' }}>{field.hint}</p>
+                    {fieldErrors[field.key] ? (
+                      <p style={{ fontSize: 11, color: '#ef4444', marginTop: 4, margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <AlertCircle size={10} />
+                        {fieldErrors[field.key]}
+                      </p>
+                    ) : (
+                      <p style={{ fontSize: 11, color: '#7aab84', marginTop: 4, margin: '4px 0 0' }}>{field.hint}</p>
+                    )}
                   </div>
                 ))}
               </div>
