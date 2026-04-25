@@ -559,7 +559,7 @@ export default function SoilPage() {
           )}
 
           {/* Local metrics */}
-          {localMetrics && (
+          {metrics && (
             <div style={{ marginTop: 28, animation: "scaleIn 0.35s ease-out" }}>
               {/* Score card */}
               <div
@@ -633,8 +633,8 @@ export default function SoilPage() {
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 12 }}
               >
-                {localMetrics.map((metric) => {
-                  const cfg = statusConfig[metric.status];
+                {metrics.map((metric) => {
+                  const cfg = statusConfig[metric.status as keyof typeof statusConfig];
                   const Icon = cfg.icon;
                   return (
                     <div

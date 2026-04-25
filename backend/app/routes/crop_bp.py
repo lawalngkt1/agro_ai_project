@@ -34,9 +34,9 @@ def predict_crop():
             return jsonify({'error': error_msg}), 400
         
         # Extract parameters
-        N = float(data['nitrogen'])
-        P = float(data['phosphorus'])
-        K = float(data['potassium'])
+        nitrogen = float(data['nitrogen'])
+        phosphorus = float(data['phosphorus'])
+        potassium = float(data['potassium'])
         temperature = float(data['temperature'])
         humidity = float(data['humidity'])
         ph = float(data['ph'])
@@ -49,7 +49,7 @@ def predict_crop():
         
         # Make prediction
         import numpy as np
-        input_data = np.array([[N, P, K, temperature, humidity, ph, rainfall]])
+        input_data = np.array([[nitrogen, phosphorus, potassium, temperature, humidity, ph, rainfall]])
         prediction = model.predict(input_data)[0]
         
         # Get prediction probability
@@ -60,9 +60,9 @@ def predict_crop():
         record = {
             'type': 'crop_prediction',
             'input': {
-                'nitrogen': N,
-                'phosphorus': P,
-                'potassium': K,
+                'nitrogen': nitrogen,
+                'phosphorus': phosphorus,
+                'potassium': potassium,
                 'temperature': temperature,
                 'humidity': humidity,
                 'ph': ph,
@@ -83,11 +83,11 @@ def predict_crop():
             if val < min_val: return "low"
             if val > max_val: return "high"
             return "optimal"
-
+        
         metrics = [
-            {"label": "Nitrogen", "value": f"{N} mg/kg", "status": get_status(N, 60, 100), "recommendation": "Essential for leaf growth and green color."},
-            {"label": "Phosphorus", "value": f"{P} mg/kg", "status": get_status(P, 30, 60), "recommendation": "Vital for root development and flowering."},
-            {"label": "Potassium", "value": f"{K} mg/kg", "status": get_status(K, 30, 60), "recommendation": "Improves disease resistance and water use."},
+            {"label": "Nitrogen", "value": f"{nitrogen} mg/kg", "status": get_status(nitrogen, 60, 100), "recommendation": "Essential for leaf growth and green color."},
+            {"label": "Phosphorus", "value": f"{phosphorus} mg/kg", "status": get_status(phosphorus, 30, 60), "recommendation": "Vital for root development and flowering."},
+            {"label": "Potassium", "value": f"{potassium} mg/kg", "status": get_status(potassium, 30, 60), "recommendation": "Improves disease resistance and water use."},
             {"label": "pH Level", "value": f"{ph}", "status": get_status(ph, 6.0, 7.5), "recommendation": "Influences nutrient availability to plants."}
         ]
         
