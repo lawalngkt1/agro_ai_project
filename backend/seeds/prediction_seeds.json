@@ -1,0 +1,48 @@
+[
+  {
+    type: "crop_prediction",
+    image_hash: "b3f1a9c2d4e8f601",
+    input: {
+      nitrogen: 90,
+      phosphorus: 42,
+      potassium: 38,
+      ph: 6.4,
+      organic_matter: 3.8,
+      temperature: 28.5,
+      humidity: 72,
+      rainfall: 840
+    },
+    output: {
+      detected_disease: "None",
+      confidence: 0.96,
+      treatment: "No treatment required",
+      soil_type: "Loam",
+      recommendations: ["Maintain soil moisture", "Use balanced fertilizer", "Monitor crop health weekly"],
+      predicted_crop: "Rice"
+    },
+    timestamp: new Date()
+  },
+  {
+    type: "disease_prediction",
+    image_hash: "d8f4b2a19c7e3d10",
+    input: {
+      nitrogen: 65,
+      phosphorus: 30,
+      potassium: 25,
+      ph: 6.1,
+      organic_matter: 2.9,
+      temperature: 24,
+      humidity: 85,
+      rainfall: 1100
+    },
+    output: {
+      detected_disease: "Early blight",
+      confidence: 0.88,
+      treatment: "Apply approved fungicide and remove affected leaves",
+      soil_type: "Clay",
+      recommendations: ["Improve airflow", "Avoid overhead watering", "Inspect leaves regularly"],
+      predicted_crop: "Tomato"
+    },
+    timestamp: new Date()
+  }
+]

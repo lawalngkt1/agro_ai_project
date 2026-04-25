@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import { API_BASE_URL } from '@/lib/api-config';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import SharedResultModal, { Metric } from '@/components/SharedResultModal';
 import { ScanLine, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, ChevronLeft, Info, Upload, X, Image as ImageIcon, TriangleAlert as AlertTriangle, Leaf, Shield } from 'lucide-react';
 
 interface DetectionResult {
@@ -74,6 +75,11 @@ export default function PlantPage() {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [hausaNote, setHausaNote] = useState("");
+  const [predictionTitle, setPredictionTitle] = useState("");
+
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {
       setError('Please upload a valid image file (JPG, PNG, WEBP).');
@@ -127,14 +133,25 @@ export default function PlantPage() {
         body: formData,
       });
 
-      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Server error: ${response.status}`);
+      }
+      
       const data = await response.json();
-      const raw = data.detected_disease || data.plant || data.disease || data.prediction || data.result || 'Unknown';
-      setResult(parseResult(String(raw)));
+      const raw = data.detected_disease || "Unknown";
+      
+      const parsed = parseResult(String(raw));
+      setResult(parsed);
+      setPredictionTitle(parsed.name);
+      setNote(data.ai_summary || parsed.description || "");
+      setHausaNote(data.ai_summary_hausa || "");
+      setModalOpen(true);
+
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      if (message.includes('fetch') || message.includes('network') || message.includes('Failed')) {
-        setError('Unable to reach the detection server. Please check your connection or try again later.');
+      if (message.includes('fetch') || message.includes('network') || message.includes('Failed') || message.includes('reach')) {
+        setError('Unable to reach the server. Please check your connection or ensure the backend is running.');
       } else {
         setError(message);
       }
@@ -585,6 +602,15 @@ export default function PlantPage() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
       `}</style>
+      <SharedResultModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Plant Analysis"
+        resultTitle={predictionTitle || "Analysis Result"}
+        note={note}
+        hausaNote={hausaNote}
+        type="plant"
+      />
     </div>
   );
 }

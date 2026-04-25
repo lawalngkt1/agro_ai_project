@@ -1,0 +1,33 @@
+// soil
+[
+  {
+    type: "Loam",
+    texture: "balanced",
+    drainage: "good",
+    organic_matter_percent: 4.2,
+    ph_min: 6.0,
+    ph_max: 7.2,
+    suitable_crops: ["Rice", "Wheat", "Maize"],
+    notes: "Balanced soil with good water retention and drainage."
+  },
+  {
+    type: "Clay",
+    texture: "fine",
+    drainage: "poor",
+    organic_matter_percent: 3.1,
+    ph_min: 6.5,
+    ph_max: 7.8,
+    suitable_crops: ["Rice"],
+    notes: "Holds water well but may compact easily."
+  },
+  {
+    type: "Sandy",
+    texture: "coarse",
+    drainage: "excellent",
+    organic_matter_percent: 1.8,
+    ph_min: 5.5,
+    ph_max: 6.8,
+    suitable_crops: ["Maize"],
+    notes: "Drains quickly and may need more frequent irrigation."
+  }
+]

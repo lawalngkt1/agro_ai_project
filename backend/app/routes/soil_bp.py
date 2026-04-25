@@ -123,7 +123,10 @@ def predict_soil():
         return jsonify({'error': f'Invalid input value: {str(e)}'}), 400
     except Exception as e:
         current_app.logger.error(f'Soil prediction error: {str(e)}')
-        return jsonify({'error': 'Prediction failed', 'details': str(e)}), 500
+        error_msg = str(e)
+        if "not found" in error_msg.lower() or "no such file" in error_msg.lower():
+            return jsonify({'error': 'Soil model file is missing on the server.', 'details': error_msg}), 503
+        return jsonify({'error': 'Prediction failed', 'details': error_msg}), 500
 
 
 @bp.route('/history', methods=['GET'])

@@ -106,7 +106,10 @@ def predict_crop():
         return jsonify({'error': f'Invalid input value: {str(e)}'}), 400
     except Exception as e:
         current_app.logger.error(f'Crop prediction error: {str(e)}')
-        return jsonify({'error': 'Prediction failed', 'details': str(e)}), 500
+        error_msg = str(e)
+        if "not found" in error_msg.lower() or "no such file" in error_msg.lower():
+            return jsonify({'error': 'Prediction model file is missing on the server. Please contact support.', 'details': error_msg}), 503
+        return jsonify({'error': 'Prediction failed', 'details': error_msg}), 500
 
 
 @bp.route('/history', methods=['GET'])

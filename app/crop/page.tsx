@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { API_BASE_URL } from '@/lib/api-config';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import SharedResultModal, { Metric } from '@/components/SharedResultModal';
 import { Sprout, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Thermometer, Droplets, FlaskConical, CloudRain, ChevronLeft, Info } from 'lucide-react';
 
 interface FormState {
@@ -113,7 +114,11 @@ export default function CropPage() {
   const [form, setForm] = useState<FormState>(initialForm);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<Metric[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [hausaNote, setHausaNote] = useState("");
 
   const handleChange = (key: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -138,9 +143,9 @@ export default function CropPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          N: parseFloat(form.nitrogen),
-          P: parseFloat(form.phosphorus),
-          K: parseFloat(form.potassium),
+          nitrogen: parseFloat(form.nitrogen),
+          phosphorus: parseFloat(form.phosphorus),
+          potassium: parseFloat(form.potassium),
           temperature: parseFloat(form.temperature),
           humidity: parseFloat(form.humidity),
           ph: parseFloat(form.ph),
@@ -148,13 +153,24 @@ export default function CropPage() {
         }),
       });
 
-      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+      if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || `Server error: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setResult(data.predicted_crop || data.crop || data.prediction || data.result || JSON.stringify(data));
+      const cropName = data.predicted_crop || "Unknown";
+      
+      setResult(cropName);
+      setNote(data.ai_summary || `Based on analysis, ${cropName} is recommended.`);
+      setHausaNote(data.ai_summary_hausa || "");
+      setMetrics(data.metrics || []);
+      setModalOpen(true);
+
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      if (message.includes('fetch') || message.includes('network') || message.includes('Failed')) {
-        setError('Unable to reach the prediction server. Please check your connection or try again later.');
+      if (message.includes('fetch') || message.includes('network') || message.includes('Failed') || message.includes('reach')) {
+        setError('Unable to reach the server. Please check your connection or ensure the backend is running.');
       } else {
         setError(message);
       }
@@ -426,6 +442,16 @@ export default function CropPage() {
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         input:focus { border-color: rgba(22,163,74,0.55) !important; box-shadow: 0 0 0 3px rgba(22,163,74,0.1); }
       `}</style>
+      <SharedResultModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Crop Recommendation"
+        resultTitle={result || "Recommended Crop"}
+        metrics={metrics}
+        note={note}
+        hausaNote={hausaNote}
+        type="crop"
+      />
     </div>
   );
 }
