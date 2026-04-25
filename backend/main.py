@@ -4,7 +4,7 @@ AgroAI Backend API
 Flask-based REST API for AI-powered agricultural decision support
 """
 import os
-from app import create_app, mongo
+from app import create_app
 from flask import jsonify
 
 # Create Flask app
@@ -14,7 +14,7 @@ app = create_app(os.getenv('FLASK_ENV', 'development'))
 @app.shell_context_processor
 def make_shell_context():
     """Add useful objects to shell context"""
-    return {'db': mongo.db}
+    return {}
 
 
 @app.route('/', methods=['GET'])
@@ -27,16 +27,13 @@ def root():
         'endpoints': {
             'health': '/api/health',
             'crop': {
-                'predict': 'POST /api/crop/predict',
-                'history': 'GET /api/crop/history'
+                'predict': 'POST /api/crop/predict'
             },
             'soil': {
-                'predict': 'POST /api/soil/predict',
-                'history': 'GET /api/soil/history'
+                'predict': 'POST /api/soil/predict'
             },
             'plant': {
-                'predict': 'POST /api/plant/predict',
-                'history': 'GET /api/plant/history'
+                'predict': 'POST /api/plant/predict'
             }
         }
     }), 200

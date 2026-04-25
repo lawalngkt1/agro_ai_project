@@ -1,1 +1,10 @@
-pip install numpy pandas matplotlib scikit-learn tensorflow flask pillow shap
+flask
+flask-cors
+scikit-learn
+tensorflow
+python-dotenv
+pillow
+numpy
+pandas
+matplotlib
+shap
