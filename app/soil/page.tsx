@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { API_BASE_URL } from '@/lib/api-config';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import SharedResultModal, { Metric } from '@/components/SharedResultModal';
+import SharedResultModal, { Metric, ProcessingOverlay } from '@/components/SharedResultModal';
 import { FlaskConical, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Droplets, ChevronLeft, Info, ChartBar as BarChart3, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface SoilForm {
@@ -203,9 +203,12 @@ export default function SoilPage() {
       setHausaNote(data.ai_summary_hausa || "");
       setMetrics(data.metrics || []);
       setOverallScore(data.overall_score || 0);
+      
+      setLoading(false);
       setModalOpen(true);
 
     } catch (err: unknown) {
+      setLoading(false);
       const message = err instanceof Error ? err.message : 'Unknown error';
       if (message.includes('fetch') || message.includes('network') || message.includes('Failed') || message.includes('reach')) {
         setError('Unable to reach the server. Please check your connection or ensure the backend is running.');
@@ -213,7 +216,7 @@ export default function SoilPage() {
         setError(message);
       }
     } finally {
-      setLoading(false);
+      // Handled in try/catch for cleaner modal transition
     }
   };
 
@@ -754,6 +757,7 @@ export default function SoilPage() {
         overallScore={overallScore}
         type="soil"
       />
+      <ProcessingOverlay open={loading} type="soil" />
     </div>
   );
 }

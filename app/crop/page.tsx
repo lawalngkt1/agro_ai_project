@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { API_BASE_URL } from '@/lib/api-config';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import SharedResultModal, { Metric } from '@/components/SharedResultModal';
+import SharedResultModal, { Metric, ProcessingOverlay } from '@/components/SharedResultModal';
 import { Sprout, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Thermometer, Droplets, FlaskConical, CloudRain, ChevronLeft, Info } from 'lucide-react';
 
 interface FormState {
@@ -165,9 +165,12 @@ export default function CropPage() {
       setNote(data.ai_summary || `Based on analysis, ${cropName} is recommended.`);
       setHausaNote(data.ai_summary_hausa || "");
       setMetrics(data.metrics || []);
+      
+      setLoading(false);
       setModalOpen(true);
 
     } catch (err: unknown) {
+      setLoading(false);
       const message = err instanceof Error ? err.message : 'Unknown error';
       if (message.includes('fetch') || message.includes('network') || message.includes('Failed') || message.includes('reach')) {
         setError('Unable to reach the server. Please check your connection or ensure the backend is running.');
@@ -175,7 +178,7 @@ export default function CropPage() {
         setError(message);
       }
     } finally {
-      setLoading(false);
+      // Handled in try/catch for cleaner modal transition
     }
   };
 
@@ -452,6 +455,7 @@ export default function CropPage() {
         hausaNote={hausaNote}
         type="crop"
       />
+      <ProcessingOverlay open={loading} type="crop" />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import { API_BASE_URL } from '@/lib/api-config';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import SharedResultModal, { Metric } from '@/components/SharedResultModal';
+import SharedResultModal, { Metric, ProcessingOverlay } from '@/components/SharedResultModal';
 import { ScanLine, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, ChevronLeft, Info, Upload, X, Image as ImageIcon, TriangleAlert as AlertTriangle, Leaf, Shield } from 'lucide-react';
 
 interface DetectionResult {
@@ -28,6 +28,7 @@ export default function PlantPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalMetrics, setModalMetrics] = useState<Metric[] | null>(null);
   const [note, setNote] = useState("");
   const [hausaNote, setHausaNote] = useState("");
   const [predictionTitle, setPredictionTitle] = useState("");
@@ -77,26 +78,18 @@ export default function PlantPage() {
     setLoading(true);
 
     try {
-      const apiKey = process.env.NEXT_PUBLIC_PLANTNET_API_KEY;
-      if (!apiKey) {
-        throw new Error('PlantNet API key is missing. Please check your environment variables.');
-      }
-
       const formData = new FormData();
       formData.append('images', selectedFile);
       formData.append('organs', 'leaf');
 
-      const project = 'all';
-      const apiUrl = `https://my-api.plantnet.org/v2/identify/${project}?api-key=${apiKey}`;
-
-      const response = await fetch(apiUrl, {
+      const response = await fetch('/api/plant/identify', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.message || `API error: ${response.status}`);
+        throw new Error(errData.error || `API error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -113,19 +106,38 @@ export default function PlantPage() {
       const confidence = Math.round(bestMatch.score * 100);
       const mainCommonName = commonNames.length > 0 ? commonNames[0] : scientificName;
 
+      // Extract more details if available (PlantNet might not provide description/treatment directly)
+      const genus = species?.genus?.scientificNameWithoutAuthor || "";
+      
       const detectionResult: DetectionResult = {
         name: mainCommonName,
         scientificName,
         family,
-        confidence,
+        confidence: bestMatch.score, // keeping raw for the inline display if needed
         type: 'healthy',
         commonNames,
-        description: `Identified as ${mainCommonName} (${scientificName}) from the ${family} family.`,
-        treatment: 'This identification is based on visual similarity. For accurate disease diagnosis, please consult a specialist if symptoms are present.'
+        description: `Identified as ${mainCommonName} (${scientificName}) from the ${family} family. Genus: ${genus}.`,
+        treatment: 'This identification is based on visual similarity from the PlantNet database. For accurate disease diagnosis, please consult a specialist if the plant shows signs of distress.'
       };
+
+      const metrics: Metric[] = [
+        {
+          label: 'Scientific Name',
+          value: scientificName,
+          status: 'optimal',
+          recommendation: `Family: ${family}`
+        },
+        {
+          label: 'Confidence',
+          value: `${confidence}%`,
+          status: confidence > 70 ? 'optimal' : confidence > 40 ? 'low' : 'low',
+          recommendation: confidence > 70 ? 'High identification certainty.' : 'Low certainty, consider a better photo.'
+        }
+      ];
 
       setResult(detectionResult);
       setPredictionTitle(mainCommonName);
+      setModalMetrics(metrics);
       
       const summary = `Species: ${mainCommonName} (${scientificName}). Family: ${family}. Confidence: ${confidence}%. Common names: ${commonNames.join(", ")}.`;
       setNote(summary);
@@ -133,9 +145,12 @@ export default function PlantPage() {
       const hausaSummary = `Wannan shuka ita ce ${mainCommonName}. Sunan kimiyya: ${scientificName}. Tana cikin iyalin ${family}. Tabbacinmu kashi ${confidence}% ne.`;
       setHausaNote(hausaSummary);
       
+      // Stop loading before opening modal for cleaner transition
+      setLoading(false);
       setModalOpen(true);
 
     } catch (err: unknown) {
+      setLoading(false);
       const message = err instanceof Error ? err.message : 'Unknown error';
       if (message.includes('fetch') || message.includes('network') || message.includes('Failed') || message.includes('reach')) {
         setError('Unable to reach the server. Please check your connection or ensure the backend is running.');
@@ -143,7 +158,7 @@ export default function PlantPage() {
         setError(message);
       }
     } finally {
-      setLoading(false);
+      // Already handled in try/catch for cleaner modal transition
     }
   };
 
@@ -594,10 +609,12 @@ export default function PlantPage() {
         onClose={() => setModalOpen(false)}
         title="Plant Analysis"
         resultTitle={predictionTitle || "Analysis Result"}
+        metrics={modalMetrics}
         note={note}
         hausaNote={hausaNote}
         type="plant"
       />
+      <ProcessingOverlay open={loading} type="plant" />
     </div>
   );
 }
