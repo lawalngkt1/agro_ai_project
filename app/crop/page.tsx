@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { API_BASE_URL } from '@/lib/api-config';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { Sprout, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Thermometer, Droplets, FlaskConical, CloudRain, ChevronLeft, Info } from 'lucide-react';
@@ -133,7 +134,7 @@ export default function CropPage() {
 
     setLoading(true);
     try {
-      const response = await fetch('https://your-agroai.onrender.com/predict_crop', {
+      const response = await fetch(`${API_BASE_URL}/crop/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -149,7 +150,7 @@ export default function CropPage() {
 
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
       const data = await response.json();
-      setResult(data.crop || data.prediction || data.result || JSON.stringify(data));
+      setResult(data.predicted_crop || data.crop || data.prediction || data.result || JSON.stringify(data));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       if (message.includes('fetch') || message.includes('network') || message.includes('Failed')) {

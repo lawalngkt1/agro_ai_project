@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { API_BASE_URL } from '@/lib/api-config';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { ScanLine, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, ChevronLeft, Info, Upload, X, Image as ImageIcon, TriangleAlert as AlertTriangle, Leaf, Shield } from 'lucide-react';
@@ -121,14 +122,14 @@ export default function PlantPage() {
       const formData = new FormData();
       formData.append('image', selectedFile);
 
-      const response = await fetch('https://your-agroai.onrender.com/predict_plant', {
+      const response = await fetch(`${API_BASE_URL}/plant/predict`, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
       const data = await response.json();
-      const raw = data.plant || data.disease || data.prediction || data.result || 'Unknown';
+      const raw = data.detected_disease || data.plant || data.disease || data.prediction || data.result || 'Unknown';
       setResult(parseResult(String(raw)));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';

@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, current_app
 from app import mongo
-from app.utils.image_processor import process_image
+from app.utils.image_processor import process_plant_image
 from app.utils.model_loader import get_plant_model
+from app.utils.ai_processor import generate_plant_summary, generate_plant_hausa
 from datetime import datetime
 import os
 
@@ -30,9 +31,7 @@ def predict_plant_disease():
             return jsonify({'error': 'Invalid file type. Allowed: jpg, jpeg, png, gif'}), 400
         
         # Process image
-        processed_image, original_filename = process_image(file)
-        if processed_image is None:
-            return jsonify({'error': 'Failed to process image'}), 400
+        processed_image, image_hash = process_plant_image(file)
         
         # Load model
         model = get_plant_model()
@@ -41,6 +40,9 @@ def predict_plant_disease():
         
         # Make prediction
         import numpy as np
+        
+        # Add batch dimension
+        processed_image = np.expand_dims(processed_image, axis=0)
         predictions = model.predict(processed_image)
         confidence = float(np.max(predictions))
         disease_class = int(np.argmax(predictions))
@@ -69,7 +71,7 @@ def predict_plant_disease():
         # Store in database
         record = {
             'type': 'plant_prediction',
-            'image_filename': original_filename,
+            'image_hash': image_hash,
             'output': {
                 'detected_disease': detected_disease,
                 'confidence': confidence,
@@ -86,6 +88,8 @@ def predict_plant_disease():
             'detected_disease': detected_disease,
             'confidence': round(confidence, 4),
             'treatment': treatments.get(detected_disease, 'Consult agricultural expert'),
+            'ai_summary': generate_plant_summary(detected_disease, treatments.get(detected_disease, 'Consult agricultural expert')),
+            'ai_summary_hausa': generate_plant_hausa(detected_disease),
             'prediction_id': str(result.inserted_id)
         }), 200
         

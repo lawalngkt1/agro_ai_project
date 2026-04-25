@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { API_BASE_URL } from '@/lib/api-config';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import SoilResultModal from '@/components/SoilResultModal';
+import SharedResultModal, { Metric } from '@/components/SharedResultModal';
 import { FlaskConical, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Droplets, ChevronLeft, Info, ChartBar as BarChart3, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface SoilForm {
@@ -138,17 +139,19 @@ export default function SoilPage() {
   const [form, setForm] = useState<SoilForm>(initialForm);
   const [loading, setLoading] = useState(false);
   const [apiResult, setApiResult] = useState<string | null>(null);
-  const [localMetrics, setLocalMetrics] = useState<SoilMetric[] | null>(null);
+  const [metrics, setMetrics] = useState<Metric[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [note, setNote] = useState("");
+  const [hausaNote, setHausaNote] = useState("");
+  const [overallScore, setOverallScore] = useState<number | null>(null);
 
   const handleChange = (key: keyof SoilForm, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     if (error) setError(null);
-    if (apiResult || localMetrics) {
+    if (apiResult || metrics) {
       setApiResult(null);
-      setLocalMetrics(null);
+      setMetrics(null);
     }
   };
 
@@ -165,7 +168,7 @@ export default function SoilPage() {
     e.preventDefault();
     setError(null);
     setApiResult(null);
-    setLocalMetrics(null);
+    setMetrics(null);
 
     const values = Object.values(form);
     if (values.some((v) => v.trim() === '')) {
@@ -175,42 +178,37 @@ export default function SoilPage() {
 
     setLoading(true);
     try {
-      const response = await fetch('https://your-agroai.onrender.com/predict_soil', {
+      const response = await fetch(`${API_BASE_URL}/soil/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          N: parseFloat(form.nitrogen),
-          P: parseFloat(form.phosphorus),
-          K: parseFloat(form.potassium),
+          nitrogen: parseFloat(form.nitrogen),
+          phosphorus: parseFloat(form.phosphorus),
+          potassium: parseFloat(form.potassium),
           ph: parseFloat(form.ph),
-          moisture: parseFloat(form.moisture),
+          organic_matter: parseFloat(form.moisture),
         }),
       });
 
-      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+      if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || `Server error: ${response.status}`);
+      }
+      
       const data = await response.json();
-      const result =
-        data.soil_type || data.prediction || data.result || "Unknown";
+      const result = data.soil_type || "Unknown";
 
       setApiResult(result);
-
-      // generate note
-      setNote(generateSoilNote(result));
-
-      // open modal
+      setNote(data.ai_summary || `Analysis complete for ${result}.`);
+      setHausaNote(data.ai_summary_hausa || "");
+      setMetrics(data.metrics || []);
+      setOverallScore(data.overall_score || 0);
       setModalOpen(true);
 
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      if (message.includes('fetch') || message.includes('network') || message.includes('Failed')) {
-        const metrics = analyzeSoil(form);
-        setLocalMetrics(metrics);
-
-        // generate note
-        setNote(generateSoilNote("Soil Analysis", metrics));
-
-        // open modal
-        setModalOpen(true);
+      if (message.includes('fetch') || message.includes('network') || message.includes('Failed') || message.includes('reach')) {
+        setError('Unable to reach the server. Please check your connection or ensure the backend is running.');
       } else {
         setError(message);
       }
@@ -219,8 +217,8 @@ export default function SoilPage() {
     }
   };
 
-  const overallScore = localMetrics
-    ? Math.round((localMetrics.filter((m) => m.status === 'optimal').length / localMetrics.length) * 100)
+  const overallScoreValue = metrics
+    ? Math.round((metrics.filter((m) => m.status === 'optimal').length / metrics.length) * 100)
     : null;
 
   return (
@@ -745,13 +743,16 @@ export default function SoilPage() {
         input:focus { border-color: rgba(13,148,136,0.55) !important; box-shadow: 0 0 0 3px rgba(13,148,136,0.1); }
       `}</style>
 
-      <SoilResultModal
+      <SharedResultModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        soilType={apiResult}
-        metrics={localMetrics}
+        title="Soil Analysis"
+        resultTitle={apiResult || "Analysis Results"}
+        metrics={metrics}
         note={note}
-        overallScore={overallScore} // ✅ ADD THIS
+        hausaNote={hausaNote}
+        overallScore={overallScore}
+        type="soil"
       />
     </div>
   );

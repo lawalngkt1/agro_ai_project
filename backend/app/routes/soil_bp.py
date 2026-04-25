@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, current_app
 from app import mongo
-from app.utils.validators import validate_soil_input
+from app.utils.validator import validate_soil_input
 from app.utils.model_loader import get_soil_model
+from app.utils.ai_processor import generate_soil_summary, generate_soil_hausa
 from datetime import datetime
 
 bp = Blueprint('soil', __name__, url_prefix='/api/soil')
@@ -30,11 +31,11 @@ def predict_soil():
             return jsonify({'error': error_msg}), 400
         
         # Extract parameters
-        N = float(data['nitrogen'])
-        P = float(data['phosphorus'])
-        K = float(data['potassium'])
-        ph = float(data['ph'])
-        organic_matter = float(data['organic_matter'])
+        N = float(data.get('nitrogen', data.get('N', 0)))
+        P = float(data.get('phosphorus', data.get('P', 0)))
+        K = float(data.get('potassium', data.get('K', 0)))
+        ph = float(data.get('ph', 0))
+        organic_matter = float(data.get('organic_matter', data.get('moisture', 0)))
         
         # Load model
         model = get_soil_model()
@@ -88,11 +89,33 @@ def predict_soil():
         
         result = mongo.db.predictions.insert_one(record)
         
+        # Calculate status for metrics
+        def get_status(val, min_val, max_val):
+            if val < min_val: return "low"
+            if val > max_val: return "high"
+            return "optimal"
+
+        metrics = [
+            {"label": "Nitrogen", "value": f"{N} mg/kg", "status": get_status(N, 40, 80), "recommendation": "Crucial for plant development."},
+            {"label": "Phosphorus", "value": f"{P} mg/kg", "status": get_status(P, 20, 50), "recommendation": "Supports energy transfer."},
+            {"label": "Potassium", "value": f"{K} mg/kg", "status": get_status(K, 20, 50), "recommendation": "Regulates water movement."},
+            {"label": "Organic Matter", "value": f"{organic_matter}%", "status": get_status(organic_matter, 3, 6), "recommendation": "Improves soil structure."}
+        ]
+        
+        overall_score = 0
+        if metrics:
+            optimal_count = len([m for m in metrics if m['status'] == 'optimal'])
+            overall_score = int((optimal_count / len(metrics)) * 100)
+
         return jsonify({
             'success': True,
             'soil_type': soil_type,
             'confidence': round(confidence, 4),
             'recommendations': recommendations.get(soil_type, []),
+            'ai_summary': generate_soil_summary(soil_type, organic_matter),
+            'ai_summary_hausa': generate_soil_hausa(soil_type),
+            'metrics': metrics,
+            'overall_score': overall_score,
             'prediction_id': str(result.inserted_id)
         }), 200
         

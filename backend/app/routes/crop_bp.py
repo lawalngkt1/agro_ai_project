@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, current_app
 from app import mongo
-from app.utils.validators import validate_crop_input
+from app.utils.validator import validate_crop_input
 from app.utils.model_loader import get_crop_model
+from app.utils.ai_processor import generate_crop_summary, generate_crop_hausa
 from datetime import datetime
 from bson.objectid import ObjectId
 
@@ -77,11 +78,27 @@ def predict_crop():
         result = mongo.db.predictions.insert_one(record)
         record['_id'] = str(result.inserted_id)
         
+        # Calculate status for metrics
+        def get_status(val, min_val, max_val):
+            if val < min_val: return "low"
+            if val > max_val: return "high"
+            return "optimal"
+
+        metrics = [
+            {"label": "Nitrogen", "value": f"{N} mg/kg", "status": get_status(N, 60, 100), "recommendation": "Essential for leaf growth and green color."},
+            {"label": "Phosphorus", "value": f"{P} mg/kg", "status": get_status(P, 30, 60), "recommendation": "Vital for root development and flowering."},
+            {"label": "Potassium", "value": f"{K} mg/kg", "status": get_status(K, 30, 60), "recommendation": "Improves disease resistance and water use."},
+            {"label": "pH Level", "value": f"{ph}", "status": get_status(ph, 6.0, 7.5), "recommendation": "Influences nutrient availability to plants."}
+        ]
+        
         return jsonify({
             'success': True,
             'predicted_crop': str(prediction),
             'confidence': round(confidence, 4),
             'message': f'Based on your soil and climate parameters, {prediction} is recommended.',
+            'ai_summary': generate_crop_summary(str(prediction), confidence),
+            'ai_summary_hausa': generate_crop_hausa(str(prediction)),
+            'metrics': metrics,
             'prediction_id': str(result.inserted_id)
         }), 200
         

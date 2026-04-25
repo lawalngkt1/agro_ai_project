@@ -11,7 +11,7 @@ from PIL import Image
 import numpy as np
 import logging
 
-from .errors import ImageProcessingError
+from ..errors import ImageProcessingError
 
 logger = logging.getLogger(__name__)
 
