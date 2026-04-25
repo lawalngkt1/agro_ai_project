@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   CircleCheck as CheckCircle2,
   TrendingUp,
@@ -159,6 +160,11 @@ type Props = {
   hausaNote?: string;
   overallScore?: number | null;
   type: 'crop' | 'soil' | 'plant';
+  cropDetails?: {
+    emoji: string;
+    description: string;
+    tip: string;
+  } | null;
 };
 
 const statusConfig = {
@@ -218,8 +224,18 @@ export default function SharedResultModal({
   note,
   hausaNote,
   overallScore,
-  type
+  type,
+  cropDetails
 }: Props) {
+  useEffect(() => {
+    if (!open) {
+      speechSynthesis.cancel();
+    }
+    return () => {
+      speechSynthesis.cancel();
+    };
+  }, [open]);
+
   if (!open) return null;
 
   const style = typeStyles[type];
@@ -229,6 +245,46 @@ export default function SharedResultModal({
     utterance.lang = lang;
     speechSynthesis.cancel();
     speechSynthesis.speak(utterance);
+  };
+
+  const downloadReport = () => {
+    let content = `AGRO AI ANALYSIS REPORT\n`;
+    content += `========================\n\n`;
+    content += `Type: ${title.toUpperCase()}\n`;
+    content += `Result: ${resultTitle}\n\n`;
+    
+    if (overallScore) {
+        content += `Health Index: ${overallScore}%\n\n`;
+    }
+
+    content += `AI SUMMARY:\n`;
+    content += `${note}\n\n`;
+
+    if (cropDetails) {
+        content += `CROP DETAILS:\n`;
+        content += `Description: ${cropDetails.description}\n`;
+        content += `Expert Tip: ${cropDetails.tip}\n\n`;
+    }
+
+    if (metrics && metrics.length > 0) {
+        content += `DETAILED METRICS:\n`;
+        metrics.forEach(m => {
+            content += `- ${m.label}: ${m.value} (${m.status.toUpperCase()})\n`;
+            content += `  Recommendation: ${m.recommendation}\n`;
+        });
+    }
+
+    content += `\nGenerated on: ${new Date().toLocaleString()}\n`;
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `AgroAI_${type}_Report_${new Date().getTime()}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -330,214 +386,263 @@ export default function SharedResultModal({
         </div>
 
         {/* BODY */}
-        <div style={{ padding: "32px 36px", maxHeight: "70vh", overflowY: "auto" }}>
+        <div style={{ padding: "32px 36px", maxHeight: "85vh", overflowY: "auto" }}>
           
-          {/* AI NOTE SECTION */}
-          <div
-            style={{
-              backgroundColor: style.secondary,
-              border: `1px solid ${style.border}`,
-              borderRadius: 16,
-              padding: 24,
-              marginBottom: 28,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <Languages size={18} color={typeStyles[type].text} />
-                <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: style.text }}>AI Analysis Summary</h4>
-            </div>
-            
-            <p
-              style={{
-                fontSize: 15,
-                color: style.text,
-                margin: 0,
-                lineHeight: 1.6,
-                fontWeight: 500
-              }}
-            >
-              {note}
-            </p>
-
-            <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-                <button
-                onClick={() => speak(note, "en-US")}
-                style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    padding: "12px",
-                    borderRadius: 12,
-                    border: "none",
-                    background: "#0f172a",
-                    color: "#fff",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    fontSize: 14,
-                    transition: 'all 0.2s',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#1e293b')}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#0f172a')}
-                >
-                <Volume2 size={16} /> Listen English
-                </button>
-
-                <button
-                onClick={() => speak(hausaNote || note, "ha-NG")}
-                style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    padding: "12px",
-                    borderRadius: 12,
-                    border: "1px solid rgba(0,0,0,0.1)",
-                    background: "#f1f5f9",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    fontSize: 14,
-                    transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#e2e8f0')}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
-                >
-                <Languages size={16} /> Saurara (Hausa)
-                </button>
-            </div>
-          </div>
-
-          {/* SCORE BOX IF SOIL */}
-          {typeof overallScore === "number" && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 20,
-                padding: "20px",
-                marginBottom: 28,
-                borderRadius: 16,
-                backgroundColor: style.secondary,
-                border: `1px solid ${style.border}`,
-              }}
-            >
-              <div
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: "50%",
-                  background:
-                    overallScore >= 70
-                      ? "linear-gradient(135deg, #16a34a, #4ade80)"
-                      : overallScore >= 40
-                        ? "linear-gradient(135deg, #d97706, #fbbf24)"
-                        : "linear-gradient(135deg, #dc2626, #f87171)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#fff",
-                  fontWeight: 800,
-                  fontSize: 20,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-                }}
-              >
-                {overallScore}%
-              </div>
-
-              <div>
-                <h4 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>
-                  Soil Health Index
-                </h4>
-                <p
-                  style={{ margin: "4px 0 0", fontSize: 14, color: style.muted }}
-                >
-                  {overallScore >= 80
-                    ? "Your soil is in excellent condition."
-                    : overallScore >= 60
-                      ? "Your soil is in good condition."
-                      : overallScore >= 40
-                        ? "Moderate issues detected in soil."
-                        : "Your soil requires urgent attention."}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* METRICS GRID */}
-          {metrics && metrics.length > 0 && (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: 16,
-                marginBottom: 28,
-              }}
-            >
-              {metrics.map((metric) => {
-                const cfg = statusConfig[metric.status];
-                const Icon = cfg.icon;
-
-                return (
-                  <div
-                    key={metric.label}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: 28,
+            marginBottom: 28
+          }}>
+            {/* LEFT COLUMN: AI SUMMARY & CROP DETAILS */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+                {/* AI NOTE SECTION */}
+                <div
                     style={{
-                      border: `1px solid ${cfg.border}`,
-                      borderRadius: 16,
-                      padding: "16px 18px",
-                      display: "flex",
-                      gap: 14,
-                      alignItems: "flex-start",
+                    backgroundColor: style.secondary,
+                    border: `1px solid ${style.border}`,
+                    borderRadius: 16,
+                    padding: 24,
+                    height: "100%"
                     }}
-                  >
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                        <Languages size={18} color={typeStyles[type].text} />
+                        <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: style.text }}>AI Analysis Summary</h4>
+                    </div>
+                    
+                    <p
+                    style={{
+                        fontSize: 15,
+                        color: style.text,
+                        margin: 0,
+                        lineHeight: 1.6,
+                        fontWeight: 500
+                    }}
+                    >
+                    {note}
+                    </p>
+
+                    <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+                        <button
+                        onClick={() => speak(note, "en-US")}
+                        style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                            padding: "12px",
+                            borderRadius: 12,
+                            border: "none",
+                            background: "#0f172a",
+                            color: "#fff",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            fontSize: 14,
+                            transition: 'all 0.2s',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                        }}
+                        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#1e293b')}
+                        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#0f172a')}
+                        >
+                        <Volume2 size={16} /> Listen English
+                        </button>
+
+                        <button
+                        onClick={() => speak(hausaNote || note, "ha-NG")}
+                        style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                            padding: "12px",
+                            borderRadius: 12,
+                            border: "1px solid rgba(0,0,0,0.1)",
+                            background: "#f1f5f9",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            fontSize: 14,
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#e2e8f0')}
+                        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+                        >
+                        <Languages size={16} /> Saurara (Hausa)
+                        </button>
+                    </div>
+                </div>
+
+                {/* RECOMMENDED CROP DETAILS IF CROP TYPE */}
+                {type === 'crop' && cropDetails && (
+                    <div style={{
+                        padding: 24,
+                        borderRadius: 16,
+                        backgroundColor: "#f0fdf4",
+                        border: "1px solid rgba(22,163,74,0.15)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 16
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <span style={{ fontSize: 32 }}>{cropDetails.emoji}</span>
+                            <div>
+                                <h4 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#166534" }}>About {resultTitle}</h4>
+                                <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#15803d", opacity: 0.8 }}>RECOMMENDED CROP</p>
+                            </div>
+                        </div>
+                        <p style={{ margin: 0, fontSize: 14, color: "#166534", lineHeight: 1.5 }}>
+                            {cropDetails.description}
+                        </p>
+                        <div style={{ 
+                            padding: "12px 16px", 
+                            backgroundColor: "rgba(22,163,74,0.1)", 
+                            borderRadius: 12,
+                            borderLeft: "4px solid #22c55e"
+                        }}>
+                            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#166534", marginBottom: 4 }}>Expert Tip:</p>
+                            <p style={{ margin: 0, fontSize: 13, color: "#166534" }}>{cropDetails.tip}</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* RIGHT COLUMN: SCORE & METRICS */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+                {/* SCORE BOX IF SOIL */}
+                {typeof overallScore === "number" && (
                     <div
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 10,
-                        backgroundColor: cfg.bg,
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 20,
+                        padding: "20px",
+                        borderRadius: 16,
+                        backgroundColor: style.secondary,
+                        border: `1px solid ${style.border}`,
+                    }}
+                    >
+                    <div
+                        style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: "50%",
+                        background:
+                            overallScore >= 70
+                            ? "linear-gradient(135deg, #16a34a, #4ade80)"
+                            : overallScore >= 40
+                                ? "linear-gradient(135deg, #d97706, #fbbf24)"
+                                : "linear-gradient(135deg, #dc2626, #f87171)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Icon size={18} color={cfg.color} />
-                    </div>
-
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginBottom: 4,
+                        color: "#fff",
+                        fontWeight: 800,
+                        fontSize: 20,
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        flexShrink: 0
                         }}
-                      >
-                        <span style={{ fontSize: 14, fontWeight: 700 }}>
-                          {metric.label}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 800,
-                            color: cfg.color,
-                          }}
-                        >
-                          {metric.value}
-                        </span>
-                      </div>
-
-                      <p style={{ fontSize: 13, color: style.muted, margin: 0, lineHeight: 1.4 }}>
-                        {metric.recommendation}
-                      </p>
+                    >
+                        {overallScore}%
                     </div>
-                  </div>
-                );
-              })}
+
+                    <div>
+                        <h4 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>
+                        Soil Health Index
+                        </h4>
+                        <p
+                        style={{ margin: "4px 0 0", fontSize: 14, color: style.muted, lineHeight: 1.4 }}
+                        >
+                        {overallScore >= 80
+                            ? "Your soil is in excellent condition."
+                            : overallScore >= 60
+                            ? "Your soil is in good condition."
+                            : overallScore >= 40
+                                ? "Moderate issues detected in soil."
+                                : "Your soil requires urgent attention."}
+                        </p>
+                    </div>
+                    </div>
+                )}
+
+                {/* METRICS GRID */}
+                {metrics && metrics.length > 0 && (
+                    <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 12,
+                    }}
+                    >
+                    <h4 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: style.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        Detailed Analysis
+                    </h4>
+                    {metrics.map((metric) => {
+                        const cfg = statusConfig[metric.status];
+                        const Icon = cfg.icon;
+
+                        return (
+                        <div
+                            key={metric.label}
+                            style={{
+                            border: `1px solid ${cfg.border}`,
+                            borderRadius: 16,
+                            padding: "14px 16px",
+                            display: "flex",
+                            gap: 14,
+                            alignItems: "flex-start",
+                            backgroundColor: "#fff"
+                            }}
+                        >
+                            <div
+                            style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 8,
+                                backgroundColor: cfg.bg,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                            }}
+                            >
+                            <Icon size={16} color={cfg.color} />
+                            </div>
+
+                            <div style={{ flex: 1 }}>
+                            <div
+                                style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                marginBottom: 2,
+                                }}
+                            >
+                                <span style={{ fontSize: 13, fontWeight: 700 }}>
+                                {metric.label}
+                                </span>
+                                <span
+                                style={{
+                                    fontSize: 13,
+                                    fontWeight: 800,
+                                    color: cfg.color,
+                                }}
+                                >
+                                {metric.value}
+                                </span>
+                            </div>
+
+                            <p style={{ fontSize: 12, color: style.muted, margin: 0, lineHeight: 1.4 }}>
+                                {metric.recommendation}
+                            </p>
+                            </div>
+                        </div>
+                        );
+                    })}
+                    </div>
+                )}
             </div>
-          )}
+          </div>
 
           {/* FOOTER ACTIONS */}
           <div style={{ display: "flex", gap: 12 }}>
@@ -559,7 +664,7 @@ export default function SharedResultModal({
               Dismiss
             </button>
             <button
-              onClick={() => window.print()}
+              onClick={downloadReport}
               style={{
                 flex: 1,
                 padding: "14px",
@@ -574,7 +679,7 @@ export default function SharedResultModal({
                 transition: 'all 0.2s'
               }}
             >
-              Download Report
+              Download Report (.txt)
             </button>
           </div>
         </div>

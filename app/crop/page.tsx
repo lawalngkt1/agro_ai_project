@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { API_BASE_URL } from '@/lib/api-config';
+import { processCropAnalysis } from '@/lib/analysis-rules';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import SharedResultModal, { Metric, ProcessingOverlay } from '@/components/SharedResultModal';
@@ -138,11 +138,11 @@ export default function CropPage() {
     }
 
     setLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/crop/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    
+    // Simulate backend processing delay
+    setTimeout(() => {
+      try {
+        const data = processCropAnalysis({
           nitrogen: parseFloat(form.nitrogen),
           phosphorus: parseFloat(form.phosphorus),
           potassium: parseFloat(form.potassium),
@@ -150,36 +150,20 @@ export default function CropPage() {
           humidity: parseFloat(form.humidity),
           ph: parseFloat(form.ph),
           rainfall: parseFloat(form.rainfall),
-        }),
-      });
+        });
 
-      if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error || `Server error: ${response.status}`);
+        setResult(data.title);
+        setNote(data.note);
+        setHausaNote(data.hausaNote);
+        setMetrics(data.metrics);
+        
+        setLoading(false);
+        setModalOpen(true);
+      } catch (err: unknown) {
+        setLoading(false);
+        setError(err instanceof Error ? err.message : 'Analysis failed. Please check your inputs.');
       }
-      
-      const data = await response.json();
-      const cropName = data.predicted_crop || "Unknown";
-      
-      setResult(cropName);
-      setNote(data.ai_summary || `Based on analysis, ${cropName} is recommended.`);
-      setHausaNote(data.ai_summary_hausa || "");
-      setMetrics(data.metrics || []);
-      
-      setLoading(false);
-      setModalOpen(true);
-
-    } catch (err: unknown) {
-      setLoading(false);
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      if (message.includes('fetch') || message.includes('network') || message.includes('Failed') || message.includes('reach')) {
-        setError('Unable to reach the server. Please check your connection or ensure the backend is running.');
-      } else {
-        setError(message);
-      }
-    } finally {
-      // Handled in try/catch for cleaner modal transition
-    }
+    }, 1500);
   };
 
   const cropInfo = result ? getCropInfo(result) : null;
@@ -454,6 +438,7 @@ export default function CropPage() {
         note={note}
         hausaNote={hausaNote}
         type="crop"
+        cropDetails={cropInfo}
       />
       <ProcessingOverlay open={loading} type="crop" />
     </div>

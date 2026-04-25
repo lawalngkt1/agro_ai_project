@@ -613,6 +613,7 @@ export default function PlantPage() {
         note={note}
         hausaNote={hausaNote}
         type="plant"
+        cropDetails={null}
       />
       <ProcessingOverlay open={loading} type="plant" />
     </div>

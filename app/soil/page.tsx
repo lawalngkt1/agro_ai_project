@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { API_BASE_URL } from '@/lib/api-config';
+import { processSoilAnalysis } from '@/lib/analysis-rules';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import SharedResultModal, { Metric, ProcessingOverlay } from '@/components/SharedResultModal';
@@ -177,47 +177,31 @@ export default function SoilPage() {
     }
 
     setLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/soil/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    
+    // Simulate backend processing delay
+    setTimeout(() => {
+      try {
+        const data = processSoilAnalysis({
           nitrogen: parseFloat(form.nitrogen),
           phosphorus: parseFloat(form.phosphorus),
           potassium: parseFloat(form.potassium),
           ph: parseFloat(form.ph),
-          organic_matter: parseFloat(form.moisture),
-        }),
-      });
+          moisture: parseFloat(form.moisture),
+        });
 
-      if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error || `Server error: ${response.status}`);
+        setApiResult(data.title);
+        setNote(data.note);
+        setHausaNote(data.hausaNote);
+        setMetrics(data.metrics);
+        setOverallScore(data.overallScore || 0);
+        
+        setLoading(false);
+        setModalOpen(true);
+      } catch (err: unknown) {
+        setLoading(false);
+        setError(err instanceof Error ? err.message : 'Analysis failed. Please check your inputs.');
       }
-      
-      const data = await response.json();
-      const result = data.soil_type || "Unknown";
-
-      setApiResult(result);
-      setNote(data.ai_summary || `Analysis complete for ${result}.`);
-      setHausaNote(data.ai_summary_hausa || "");
-      setMetrics(data.metrics || []);
-      setOverallScore(data.overall_score || 0);
-      
-      setLoading(false);
-      setModalOpen(true);
-
-    } catch (err: unknown) {
-      setLoading(false);
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      if (message.includes('fetch') || message.includes('network') || message.includes('Failed') || message.includes('reach')) {
-        setError('Unable to reach the server. Please check your connection or ensure the backend is running.');
-      } else {
-        setError(message);
-      }
-    } finally {
-      // Handled in try/catch for cleaner modal transition
-    }
+    }, 1500);
   };
 
   const overallScoreValue = metrics
@@ -756,6 +740,7 @@ export default function SoilPage() {
         hausaNote={hausaNote}
         overallScore={overallScore}
         type="soil"
+        cropDetails={null}
       />
       <ProcessingOverlay open={loading} type="soil" />
     </div>
