@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MessageCircle, X, Send } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 type Message = {
   role: "user" | "assistant";
@@ -14,7 +15,6 @@ const botReplies = [
   "This leaf image suggests early fungal infection 🐛",
   "For best yield, apply nitrogen fertilizer in split doses 🌿",
 ];
-
 
 function getBotReply(input: string) {
   const lower = input.toLowerCase();
@@ -184,7 +184,24 @@ export default function Chatbot() {
                       : "0 2px 10px rgba(0,0,0,0.05)",
                 }}
               >
-                {msg.text}
+                <div
+                  key={i}
+                  style={{
+                    alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                    background: msg.role === "user" ? "#16a34a" : "#ffffff",
+                    color: msg.role === "user" ? "#fff" : "#14532d",
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    fontSize: 13,
+                    maxWidth: "80%",
+                    boxShadow:
+                      msg.role === "user"
+                        ? "0 4px 12px rgba(22,163,74,0.3)"
+                        : "0 2px 10px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                </div>
               </div>
             ))}
           </div>
