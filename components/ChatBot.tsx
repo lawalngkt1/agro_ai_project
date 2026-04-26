@@ -37,18 +37,42 @@ export default function Chatbot() {
   ]);
   const [input, setInput] = useState("");
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMsg: Message = { role: "user", text: input };
+    const userMsg = { role: "user", content: input };
 
-    const botMsg: Message = {
-      role: "bot",
-      text: getBotReply(input),
-    };
+    setMessages((prev) => [...prev, { role: "user", text: input }]);
 
-    setMessages((prev) => [...prev, userMsg, botMsg]);
     setInput("");
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            ...messages.map((m) => ({
+              role: m.role,
+              content: m.text,
+            })),
+            userMsg,
+          ],
+        }),
+      });
+
+      const data = await res.json();
+
+      setMessages((prev) => [...prev, { role: "bot", text: data.reply }]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text: "Sorry, I couldn't process that request.",
+        },
+      ]);
+    }
   };
 
   return (
