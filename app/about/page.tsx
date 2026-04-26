@@ -1,14 +1,13 @@
 import Navbar from "@/components/Navbar";
 import {
   Leaf,
+  Sprout,
+  Bug,
+  FlaskConical,
+  Brain,
   Zap,
   Globe,
-  Shield,
-  BarChart3,
-  Brain,
-  Users,
-  Target,
-  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function AboutPage() {
@@ -25,246 +24,270 @@ export default function AboutPage() {
             "linear-gradient(160deg, #f0fdf4 0%, #dcfce7 40%, #f8fdf9 100%)",
         }}
       >
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
-          <div style={{ textAlign: "center" }}>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "6px 14px",
-                borderRadius: 999,
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#15803d",
-                backgroundColor: "rgba(22,163,74,0.1)",
-                border: "1px solid rgba(22,163,74,0.2)",
-              }}
-            >
-              <Sparkles size={12} />
-              About AgroAI Advisor
-            </span>
-
-            <h1
-              style={{
-                fontSize: "clamp(2.2rem, 5vw, 3.5rem)",
-                fontWeight: 800,
-                color: "#14532d",
-                marginTop: 20,
-                lineHeight: 1.1,
-                letterSpacing: "-1px",
-              }}
-            >
-              Building the Future of{" "}
-              <span
-                style={{
-                  background:
-                    "linear-gradient(135deg, #16a34a 0%, #4ade80 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Intelligent Agriculture
-              </span>
-            </h1>
-
-            <p
-              style={{
-                maxWidth: 680,
-                margin: "20px auto 0",
-                fontSize: 17,
-                color: "#3d6b4a",
-                lineHeight: 1.7,
-              }}
-            >
-              AgroAI Advisor is an AI-powered agricultural intelligence system
-              that helps farmers make smarter decisions using crop prediction,
-              soil analysis, plant disease detection, and multilingual voice AI.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* CORE MISSION */}
-      <section style={{ padding: "80px 24px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+          <h1
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 24,
-            }}
-          >
-            {[
-              {
-                icon: Target,
-                title: "Our Mission",
-                desc: "To empower farmers with AI tools that increase yield, reduce uncertainty, and improve food security across Africa and beyond.",
-              },
-              {
-                icon: Brain,
-                title: "Our Vision",
-                desc: "A world where every farmer has access to intelligent, real-time agricultural decision support powered by AI.",
-              },
-              {
-                icon: Users,
-                title: "Our Focus",
-                desc: "Designed for real farmers — simple, accessible, multilingual, and usable even in low-resource environments.",
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                style={{
-                  background: "#fff",
-                  border: "1px solid rgba(22,163,74,0.12)",
-                  borderRadius: 18,
-                  padding: 24,
-                  boxShadow: "0 4px 20px rgba(21,128,61,0.06)",
-                }}
-              >
-                <item.icon size={22} color="#16a34a" />
-                <h3
-                  style={{
-                    marginTop: 12,
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: "#14532d",
-                  }}
-                >
-                  {item.title}
-                </h3>
-                <p style={{ fontSize: 14, color: "#4b7a59", lineHeight: 1.6 }}>
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* WHAT WE DO */}
-      <section
-        style={{
-          padding: "80px 24px",
-          background: "linear-gradient(180deg, #f0fdf4 0%, #f8fdf9 100%)",
-        }}
-      >
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <h2
-            style={{
+              fontSize: "2.6rem",
+              fontWeight: 800,
+              color: "#14532d",
               textAlign: "center",
-              fontSize: 26,
-              fontWeight: 800,
-              color: "#14532d",
-              marginBottom: 40,
+              lineHeight: 1.2,
             }}
           >
-            What We Do
-          </h2>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-              gap: 20,
-            }}
-          >
-            {[
-              {
-                icon: Leaf,
-                title: "Crop Recommendation",
-                desc: "AI-driven crop suggestions based on soil and climate data.",
-              },
-              {
-                icon: BarChart3,
-                title: "Soil Intelligence",
-                desc: "Analyze soil nutrients and improve farming decisions.",
-              },
-              {
-                icon: Shield,
-                title: "Plant Disease Detection",
-                desc: "Detect crop diseases instantly using computer vision.",
-              },
-              {
-                icon: Globe,
-                title: "Multilingual Voice AI",
-                desc: "Get AI insights in Hausa and English for accessibility.",
-              },
-              {
-                icon: Zap,
-                title: "Real-Time AI",
-                desc: "Fast inference models for instant agricultural decisions.",
-              },
-            ].map((f) => (
-              <div
-                key={f.title}
-                style={{
-                  background: "#fff",
-                  borderRadius: 16,
-                  padding: 20,
-                  border: "1px solid rgba(22,163,74,0.1)",
-                }}
-              >
-                <f.icon size={20} color="#16a34a" />
-                <h3
-                  style={{
-                    marginTop: 10,
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color: "#14532d",
-                  }}
-                >
-                  {f.title}
-                </h3>
-                <p style={{ fontSize: 13, color: "#4b7a59" }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* WHY IT MATTERS */}
-      <section style={{ padding: "80px 24px" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
-          <h2
-            style={{
-              fontSize: 26,
-              fontWeight: 800,
-              color: "#14532d",
-              marginBottom: 16,
-            }}
-          >
-            Why AgroAI Exists
-          </h2>
+            AgroAI Advisor
+          </h1>
 
           <p
             style={{
-              fontSize: 15,
-              color: "#4b7a59",
+              textAlign: "center",
+              marginTop: 16,
+              fontSize: 16,
+              color: "#3d6b4a",
               lineHeight: 1.7,
+              maxWidth: 720,
+              marginLeft: "auto",
+              marginRight: "auto",
             }}
           >
-            Agriculture still relies heavily on guesswork in many regions.
-            AgroAI bridges this gap by turning agricultural data into actionable
-            intelligence — helping farmers grow more with less risk.
+            An AI-powered smart farming system that helps farmers make better
+            decisions using data, machine learning, and real-time agricultural
+            intelligence.
           </p>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer
-        style={{
-          padding: 40,
-          borderTop: "1px solid rgba(22,163,74,0.1)",
-          background: "#fff",
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontWeight: 700, color: "#14532d" }}>AgroAI Advisor</div>
-        <p style={{ fontSize: 13, color: "#6b8f74", marginTop: 6 }}>
-          AI-powered precision agriculture system
-        </p>
-      </footer>
+      {/* WHAT IT IS */}
+      <section style={{ padding: "70px 24px" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <h2
+            style={{
+              fontSize: 22,
+              fontWeight: 800,
+              color: "#14532d",
+              marginBottom: 20,
+            }}
+          >
+            🌱 What AgroAI Advisor is
+          </h2>
+
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 16,
+              padding: 22,
+              border: "1px solid rgba(22,163,74,0.12)",
+              boxShadow: "0 4px 18px rgba(21,128,61,0.05)",
+              color: "#4b7a59",
+              lineHeight: 1.7,
+              fontSize: 14,
+            }}
+          >
+            AgroAI Advisor is a digital agricultural intelligence platform that
+            helps farmers:
+            <ul>
+              <li>Recommend the best crops to grow</li>
+              <li>Detect and manage pests and diseases</li>
+              <li>Analyze soil health and nutrients</li>
+            </ul>
+            It combines artificial intelligence, sensors, and real-time data
+            sources to deliver accurate farming insights.
+          </div>
+        </div>
+      </section>
+
+      {/* CORE FEATURES */}
+      <section style={{ padding: "60px 24px" }}>
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: 20,
+          }}
+        >
+          {[
+            {
+              icon: Sprout,
+              title: "Crop Advisory",
+              desc: "Recommends best crops based on soil type, weather, and historical data.",
+              points: [
+                "Best crops for land",
+                "Expected yield prediction",
+                "Fertilizer recommendations",
+              ],
+              color: "#16a34a",
+            },
+            {
+              icon: Bug,
+              title: "Pest & Disease Detection",
+              desc: "Detects plant diseases and pests using AI vision models.",
+              points: [
+                "Leaf image diagnosis",
+                "Early pest detection",
+                "Instant treatment advice",
+              ],
+              color: "#15803d",
+            },
+            {
+              icon: FlaskConical,
+              title: "Soil Analysis",
+              desc: "Analyzes soil health using NPK, moisture, and pH data.",
+              points: [
+                "Soil fertility status",
+                "Fertilizer dosage",
+                "Irrigation guidance",
+              ],
+              color: "#0d9488",
+            },
+          ].map((f) => (
+            <div
+              key={f.title}
+              style={{
+                background: "#fff",
+                borderRadius: 16,
+                padding: 20,
+                border: "1px solid rgba(22,163,74,0.12)",
+                boxShadow: "0 4px 18px rgba(21,128,61,0.05)",
+              }}
+            >
+              <f.icon size={20} color={f.color} />
+              <h3
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: "#14532d",
+                  marginTop: 10,
+                }}
+              >
+                {f.title}
+              </h3>
+              <p style={{ fontSize: 13, color: "#4b7a59" }}>{f.desc}</p>
+
+              <ul style={{ marginTop: 10, paddingLeft: 16 }}>
+                {f.points.map((p) => (
+                  <li
+                    key={p}
+                    style={{
+                      fontSize: 13,
+                      color: "#3d6b4a",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section style={{ padding: "70px 24px", background: "#f0fdf4" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <h2
+            style={{
+              fontSize: 22,
+              fontWeight: 800,
+              color: "#14532d",
+              marginBottom: 20,
+              textAlign: "center",
+            }}
+          >
+            🤖 How It Works
+          </h2>
+
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 16,
+              padding: 24,
+              border: "1px solid rgba(22,163,74,0.12)",
+              lineHeight: 1.7,
+              color: "#4b7a59",
+            }}
+          >
+            <ol>
+              <li>Farmer inputs data (image, soil test, or location)</li>
+              <li>AI analyzes thousands of agricultural data points</li>
+              <li>System generates crop, pest, and soil recommendations</li>
+              <li>Optional chatbot provides instant agronomy advice</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      {/* BENEFITS */}
+      <section style={{ padding: "70px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <h2
+            style={{
+              textAlign: "center",
+              fontSize: 22,
+              fontWeight: 800,
+              color: "#14532d",
+              marginBottom: 30,
+            }}
+          >
+            🎯 Key Benefits
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: 16,
+            }}
+          >
+            {[
+              "Increases crop yield",
+              "Reduces fertilizer waste",
+              "Early pest detection",
+              "Data-driven decisions",
+              "Lower farming costs",
+              "Improved food security",
+            ].map((b) => (
+              <div
+                key={b}
+                style={{
+                  background: "#fff",
+                  padding: 16,
+                  borderRadius: 12,
+                  border: "1px solid rgba(22,163,74,0.12)",
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "center",
+                }}
+              >
+                <CheckCircle2 size={16} color="#16a34a" />
+                <span style={{ fontSize: 13, color: "#3d6b4a" }}>{b}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SUMMARY */}
+      <section style={{ padding: "80px 24px", textAlign: "center" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+          <h2 style={{ color: "#14532d", fontWeight: 800 }}>
+            🧠 Simple Summary
+          </h2>
+          <p
+            style={{
+              marginTop: 12,
+              color: "#4b7a59",
+              fontSize: 15,
+              lineHeight: 1.7,
+            }}
+          >
+            AgroAI Advisor is a digital farming assistant that tells you what to
+            plant, detects what is wrong with your crops, and guides you on how
+            to improve soil and increase yield.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
