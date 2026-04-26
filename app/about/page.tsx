@@ -1,3 +1,4 @@
+import Chatbot from "@/components/ChatBot";
 import Navbar from "@/components/Navbar";
 import {
   Leaf,
@@ -431,6 +432,8 @@ export default function AboutPage() {
           </div>
         </div>
       </footer>
+      {/* Chatbot */}
+      <Chatbot />
     </div>
   );
 }
