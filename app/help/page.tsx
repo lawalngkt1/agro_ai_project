@@ -1,3 +1,4 @@
+import Chatbot from "@/components/ChatBot";
 import Navbar from "@/components/Navbar";
 import {
   MessageSquare,
@@ -161,6 +162,8 @@ export default function HelpPage() {
           </div>
         </div>
       </section>
+      {/* Chatbot */}
+      <Chatbot />
     </div>
   );
 }

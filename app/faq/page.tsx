@@ -1,3 +1,4 @@
+import Chatbot from "@/components/ChatBot";
 import Navbar from "@/components/Navbar";
 import {
   HelpCircle,
@@ -106,6 +107,8 @@ export default function FAQPage() {
           Still need help? Visit the Help page or contact support.
         </p>
       </section>
+      {/* Chatbot */}
+      <Chatbot />
     </div>
   );
 }
