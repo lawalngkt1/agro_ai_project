@@ -9,6 +9,7 @@ import {
   Globe,
   CheckCircle2,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function AboutPage() {
   return (
@@ -288,6 +289,148 @@ export default function AboutPage() {
           </p>
         </div>
       </section>
+      {/* Footer */}
+      <footer
+        style={{
+          borderTop: "1px solid rgba(22,163,74,0.1)",
+          padding: "40px 24px",
+          backgroundColor: "#fff",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 32,
+            alignItems: "start",
+          }}
+        >
+          {/* BRAND */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background:
+                    "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Leaf size={14} color="#fff" />
+              </div>
+
+              <span style={{ fontWeight: 800, color: "#14532d", fontSize: 15 }}>
+                AgroAI Advisor
+              </span>
+            </div>
+
+            <p
+              style={{
+                fontSize: 13,
+                color: "#6b8f74",
+                marginTop: 12,
+                lineHeight: 1.6,
+              }}
+            >
+              AI-powered precision agriculture system for smarter farming
+              decisions using machine learning and real-time data.
+            </p>
+          </div>
+
+          {/* TOOLS */}
+          <div>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: "#14532d" }}>
+              Tools
+            </h4>
+
+            <div
+              style={{
+                marginTop: 10,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              {[
+                { href: "/crop", label: "Crop Recommendation" },
+                { href: "/soil", label: "Soil Analysis" },
+                { href: "/plant", label: "Plant Detection" },
+              ].map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  style={{
+                    fontSize: 13,
+                    color: "#4b7a59",
+                    textDecoration: "none",
+                  }}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* SUPPORT */}
+          <div>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: "#14532d" }}>
+              Support
+            </h4>
+
+            <div
+              style={{
+                marginTop: 10,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              {[
+                { href: "/about", label: "About" },
+                { href: "/faq", label: "FAQ" },
+                { href: "/help", label: "Help Center" },
+              ].map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  style={{
+                    fontSize: 13,
+                    color: "#4b7a59",
+                    textDecoration: "none",
+                  }}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* FOOTER NOTE */}
+          <div>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: "#14532d" }}>
+              System
+            </h4>
+
+            <p
+              style={{
+                fontSize: 13,
+                color: "#6b8f74",
+                marginTop: 10,
+                lineHeight: 1.6,
+              }}
+            >
+              © {new Date().getFullYear()} AgroAI Advisor. Built for
+              sustainable, data-driven agriculture.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
