@@ -1,31 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Message = {
   role: "user" | "assistant";
   text: string;
 };
-const botReplies = [
-  "Based on your soil data, maize would perform well in this condition 🌽",
-  "Your soil pH looks optimal for legumes 🌱",
-  "I recommend checking rainfall patterns before planting 🌧️",
-  "This leaf image suggests early fungal infection 🐛",
-  "For best yield, apply nitrogen fertilizer in split doses 🌿",
-];
-
-function getBotReply(input: string) {
-  const lower = input.toLowerCase();
-
-  if (lower.includes("crop")) return botReplies[0];
-  if (lower.includes("soil")) return botReplies[1];
-  if (lower.includes("rain")) return botReplies[2];
-  if (lower.includes("leaf") || lower.includes("disease")) return botReplies[3];
-
-  return botReplies[Math.floor(Math.random() * botReplies.length)];
-}
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
@@ -38,13 +21,19 @@ export default function Chatbot() {
   ]);
   const [input, setInput] = useState("");
 
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto scroll
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
     const userText = input;
 
     setMessages((prev) => [...prev, { role: "user", text: userText }]);
-
     setInput("");
     setLoading(true);
 
@@ -55,7 +44,7 @@ export default function Chatbot() {
         body: JSON.stringify({
           messages: [
             ...messages.map((m) => ({
-              role: m.role === "assistant" ? "assistant" : "user",
+              role: m.role,
               content: m.text,
             })),
             { role: "user", content: userText },
@@ -72,12 +61,12 @@ export default function Chatbot() {
           text: data.reply || "No response",
         },
       ]);
-    } catch (err) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text: "AI service is currently unavailable. Try again.",
+          text: "⚠️ AI service is currently unavailable. Try again.",
         },
       ]);
     } finally {
@@ -99,7 +88,7 @@ export default function Chatbot() {
           borderRadius: "50%",
           background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
           border: "none",
-          boxShadow: "0 10px 30px rgba(22,163,74,0.35)",
+          boxShadow: "0 12px 30px rgba(22,163,74,0.35)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -117,11 +106,11 @@ export default function Chatbot() {
             position: "fixed",
             bottom: 90,
             right: 24,
-            width: 340,
-            height: 480,
+            width: 360,
+            height: 520,
             background: "#fff",
-            borderRadius: 16,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+            borderRadius: 18,
+            boxShadow: "0 30px 80px rgba(0,0,0,0.25)",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
@@ -133,7 +122,7 @@ export default function Chatbot() {
           <div
             style={{
               background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
-              padding: 14,
+              padding: 16,
               color: "#fff",
               display: "flex",
               justifyContent: "space-between",
@@ -159,12 +148,12 @@ export default function Chatbot() {
           <div
             style={{
               flex: 1,
-              padding: 12,
+              padding: 14,
               overflowY: "auto",
               background: "#f8fdf9",
               display: "flex",
               flexDirection: "column",
-              gap: 10,
+              gap: 12,
             }}
           >
             {messages.map((msg, i) => (
@@ -180,37 +169,40 @@ export default function Chatbot() {
                   maxWidth: "80%",
                   boxShadow:
                     msg.role === "user"
-                      ? "0 4px 12px rgba(22,163,74,0.3)"
-                      : "0 2px 10px rgba(0,0,0,0.05)",
+                      ? "0 6px 16px rgba(22,163,74,0.25)"
+                      : "0 3px 12px rgba(0,0,0,0.06)",
                 }}
               >
-                <div
-                  key={i}
-                  style={{
-                    alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                    background: msg.role === "user" ? "#16a34a" : "#ffffff",
-                    color: msg.role === "user" ? "#fff" : "#14532d",
-                    padding: "10px 12px",
-                    borderRadius: 12,
-                    fontSize: 13,
-                    maxWidth: "80%",
-                    boxShadow:
-                      msg.role === "user"
-                        ? "0 4px 12px rgba(22,163,74,0.3)"
-                        : "0 2px 10px rgba(0,0,0,0.05)",
-                  }}
-                >
-                  <ReactMarkdown>{msg.text}</ReactMarkdown>
-                </div>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {msg.text}
+                </ReactMarkdown>
               </div>
             ))}
+
+            {/* Typing Indicator */}
+            {loading && (
+              <div
+                style={{
+                  alignSelf: "flex-start",
+                  background: "#e2e8f0",
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  fontSize: 13,
+                  color: "#475569",
+                }}
+              >
+                AgroAI is typing...
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
           </div>
 
           {/* INPUT */}
           <div
             style={{
               display: "flex",
-              padding: 10,
+              padding: 12,
               borderTop: "1px solid rgba(0,0,0,0.06)",
               background: "#fff",
             }}
@@ -219,6 +211,7 @@ export default function Chatbot() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder={
                 loading ? "Waiting for response..." : "Ask about crops, soil..."
               }
@@ -229,7 +222,6 @@ export default function Chatbot() {
                 border: "1px solid rgba(22,163,74,0.2)",
                 outline: "none",
                 fontSize: 13,
-                opacity: loading ? 0.6 : 1,
               }}
             />
 
@@ -244,7 +236,9 @@ export default function Chatbot() {
                 padding: "10px 12px",
                 cursor: loading ? "not-allowed" : "pointer",
                 color: "#fff",
-                opacity: loading ? 0.6 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               <Send size={16} />
