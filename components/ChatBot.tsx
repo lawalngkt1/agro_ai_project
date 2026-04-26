@@ -4,10 +4,9 @@ import { useState } from "react";
 import { MessageCircle, X, Send } from "lucide-react";
 
 type Message = {
-  role: "user" | "bot";
+  role: "user" | "assistant";
   text: string;
 };
-
 const botReplies = [
   "Based on your soil data, maize would perform well in this condition 🌽",
   "Your soil pH looks optimal for legumes 🌱",
@@ -33,14 +32,14 @@ export default function Chatbot() {
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
-      role: "bot",
+      role: "assistant",
       text: "Hello 👋 I am AgroAI Assistant. Ask me about crops, soil, or plant health.",
     },
   ]);
   const [input, setInput] = useState("");
 
   const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim()) return;
 
     const userText = input;
 
@@ -56,7 +55,7 @@ export default function Chatbot() {
         body: JSON.stringify({
           messages: [
             ...messages.map((m) => ({
-              role: m.role,
+              role: m.role === "assistant" ? "assistant" : "user",
               content: m.text,
             })),
             { role: "user", content: userText },
@@ -66,41 +65,23 @@ export default function Chatbot() {
 
       const data = await res.json();
 
-      setMessages((prev) => [...prev, { role: "bot", text: data.reply }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text: data.reply || "No response",
+        },
+      ]);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
         {
-          role: "bot",
-          text: "Unable to process request right now.",
+          role: "assistant",
+          text: "AI service is currently unavailable. Try again.",
         },
       ]);
     } finally {
       setLoading(false);
-    }
-
-    {
-      loading && (
-        <div
-          style={{
-            alignSelf: "flex-start",
-            background: "#fff",
-            padding: "10px 12px",
-            borderRadius: 12,
-            fontSize: 13,
-            color: "#4b7a59",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-            display: "flex",
-            gap: 6,
-            alignItems: "center",
-          }}
-        >
-          <span style={{ animation: "pulse 1s infinite" }}>
-            AgroAI is thinking
-          </span>
-          <span>...</span>
-        </div>
-      );
     }
   };
 

@@ -1,36 +1,58 @@
 import { NextResponse } from "next/server";
-import { moonshot } from "@/lib/moonshot";
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    const completion = await moonshot.chat.completions.create({
-      model: "kimi-k2.6",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are AgroAI Advisor, an expert agricultural assistant for African farming. Provide simple, practical farming advice. You can respond in English or Hausa.",
-        },
-        ...(messages || []),
-      ],
-      temperature: 0.7,
-    });
+    if (!messages || !Array.isArray(messages)) {
+      return NextResponse.json(
+        { error: "Invalid messages format" },
+        { status: 400 },
+      );
+    }
 
-    const reply =
-      completion.choices?.[0]?.message?.content || "No response from AI";
-
-    return NextResponse.json({ reply });
-  } catch (err: any) {
-    console.error("Moonshot error:", err);
-
-    return NextResponse.json(
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
       {
-        error: "Chat failed",
-        message: err.message,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "http://localhost:3000",
+          "X-Title": "AgroAI Advisor",
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are AgroAI Advisor, an expert agricultural assistant for African farmers. Provide practical, simple, localized farming advice. You support crops, soil, pests, irrigation, and farming decisions. You can respond in English or Hausa when appropriate.",
+            },
+            ...messages,
+          ],
+          temperature: 0.7,
+        }),
       },
-      { status: 500 },
     );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("OpenRouter Error:", data);
+      return NextResponse.json(
+        { error: "AI request failed", details: data },
+        { status: 500 },
+      );
+    }
+
+    const reply = data?.choices?.[0]?.message?.content;
+
+    return NextResponse.json({
+      reply: reply || "No response from AI",
+    });
+  } catch (err) {
+    console.error("Chat API crash:", err);
+    return NextResponse.json({ error: "Chat request failed" }, { status: 500 });
   }
 }
