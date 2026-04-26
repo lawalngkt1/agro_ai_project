@@ -91,7 +91,7 @@ export function AnalysisSummary({
           <Volume2 size={16} /> Listen English
         </button>
 
-        <button
+        {/* <button
           onClick={() => {
             if (!hausaNote) return;
             onSpeak(hausaNote, "ha-NG");
@@ -119,7 +119,7 @@ export function AnalysisSummary({
           }
         >
           <Languages size={16} /> Saurara (Hausa)
-        </button>
+        </button> */}
       </div>
     </div>
   );

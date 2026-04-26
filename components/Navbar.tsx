@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Leaf, Menu, X, Sprout, FlaskConical, ScanLine } from 'lucide-react';
+import { Leaf, Menu, X, Sprout, FlaskConical, ScanLine, InfoIcon } from 'lucide-react';
 
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/crop', label: 'Crop Rec.', icon: Sprout },
   { href: '/soil', label: 'Soil Analysis', icon: FlaskConical },
   { href: '/plant', label: 'Plant Detection', icon: ScanLine },
-];
+  { href: '/about', label: 'About', icon: InfoIcon }
+]
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
