@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import SharedResultModal, { Metric, ProcessingOverlay } from '@/components/SharedResultModal';
 import { Sprout, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Thermometer, Droplets, FlaskConical, CloudRain, ChevronLeft, Info } from 'lucide-react';
+import Chatbot from '@/components/ChatBot';
 
 interface FormState {
   nitrogen: string;
@@ -472,6 +473,8 @@ export default function CropPage() {
         cropDetails={cropInfo}
       />
       <ProcessingOverlay open={loading} type="crop" />
+            {/* Chatbot */}
+            <Chatbot />
     </div>
   );
 }

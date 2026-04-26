@@ -1,12 +1,28 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { processSoilAnalysis } from '@/lib/analysis-rules';
-import { SOIL_VALIDATION_RULES, validateField } from '@/lib/validation-rules';
-import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import SharedResultModal, { Metric, ProcessingOverlay } from '@/components/SharedResultModal';
-import { FlaskConical, Loader as Loader2, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Droplets, ChevronLeft, Info, ChartBar as BarChart3, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useState } from "react";
+import { processSoilAnalysis } from "@/lib/analysis-rules";
+import { SOIL_VALIDATION_RULES, validateField } from "@/lib/validation-rules";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import SharedResultModal, {
+  Metric,
+  ProcessingOverlay,
+} from "@/components/SharedResultModal";
+import {
+  FlaskConical,
+  Loader as Loader2,
+  CircleAlert as AlertCircle,
+  CircleCheck as CheckCircle2,
+  Droplets,
+  ChevronLeft,
+  Info,
+  ChartBar as BarChart3,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+} from "lucide-react";
+import Chatbot from "@/components/ChatBot";
 
 interface SoilForm {
   nitrogen: string;
@@ -17,65 +33,65 @@ interface SoilForm {
 }
 
 const initialForm: SoilForm = {
-  nitrogen: '',
-  phosphorus: '',
-  potassium: '',
-  ph: '',
-  moisture: '',
+  nitrogen: "",
+  phosphorus: "",
+  potassium: "",
+  ph: "",
+  moisture: "",
 };
 
 const fields = [
   {
-    key: 'nitrogen' as keyof SoilForm,
-    label: 'Nitrogen (N)',
-    placeholder: 'e.g. 90',
-    unit: 'mg/kg',
+    key: "nitrogen" as keyof SoilForm,
+    label: "Nitrogen (N)",
+    placeholder: "e.g. 90",
+    unit: "mg/kg",
     icon: FlaskConical,
-    hint: 'Available nitrogen in soil',
-    color: '#16a34a',
+    hint: "Available nitrogen in soil",
+    color: "#16a34a",
   },
   {
-    key: 'phosphorus' as keyof SoilForm,
-    label: 'Phosphorus (P)',
-    placeholder: 'e.g. 42',
-    unit: 'mg/kg',
+    key: "phosphorus" as keyof SoilForm,
+    label: "Phosphorus (P)",
+    placeholder: "e.g. 42",
+    unit: "mg/kg",
     icon: FlaskConical,
-    hint: 'Available phosphorus',
-    color: '#0d9488',
+    hint: "Available phosphorus",
+    color: "#0d9488",
   },
   {
-    key: 'potassium' as keyof SoilForm,
-    label: 'Potassium (K)',
-    placeholder: 'e.g. 43',
-    unit: 'mg/kg',
+    key: "potassium" as keyof SoilForm,
+    label: "Potassium (K)",
+    placeholder: "e.g. 43",
+    unit: "mg/kg",
     icon: FlaskConical,
-    hint: 'Available potassium',
-    color: '#15803d',
+    hint: "Available potassium",
+    color: "#15803d",
   },
   {
-    key: 'ph' as keyof SoilForm,
-    label: 'pH Level',
-    placeholder: 'e.g. 6.5',
-    unit: 'pH',
+    key: "ph" as keyof SoilForm,
+    label: "pH Level",
+    placeholder: "e.g. 6.5",
+    unit: "pH",
     icon: BarChart3,
-    hint: 'Ideal range: 5.5 – 7.5',
-    color: '#7c3aed',
+    hint: "Ideal range: 5.5 – 7.5",
+    color: "#7c3aed",
   },
   {
-    key: 'moisture' as keyof SoilForm,
-    label: 'Moisture',
-    placeholder: 'e.g. 40',
-    unit: '%',
+    key: "moisture" as keyof SoilForm,
+    label: "Moisture",
+    placeholder: "e.g. 40",
+    unit: "%",
     icon: Droplets,
-    hint: 'Volumetric water content',
-    color: '#0284c7',
+    hint: "Volumetric water content",
+    color: "#0284c7",
   },
 ];
 
 interface SoilMetric {
   label: string;
   value: string | number;
-  status: 'low' | 'optimal' | 'high';
+  status: "low" | "optimal" | "high";
   recommendation: string;
 }
 
@@ -88,42 +104,85 @@ function analyzeSoil(form: SoilForm): SoilMetric[] {
 
   return [
     {
-      label: 'Nitrogen (N)',
+      label: "Nitrogen (N)",
       value: `${n} mg/kg`,
-      status: n < 30 ? 'low' : n > 120 ? 'high' : 'optimal',
-      recommendation: n < 30 ? 'Apply nitrogen fertilizer or legume cover crops.' : n > 120 ? 'Reduce nitrogen inputs to prevent leaching.' : 'Nitrogen levels are well-balanced.',
+      status: n < 30 ? "low" : n > 120 ? "high" : "optimal",
+      recommendation:
+        n < 30
+          ? "Apply nitrogen fertilizer or legume cover crops."
+          : n > 120
+            ? "Reduce nitrogen inputs to prevent leaching."
+            : "Nitrogen levels are well-balanced.",
     },
     {
-      label: 'Phosphorus (P)',
+      label: "Phosphorus (P)",
       value: `${p} mg/kg`,
-      status: p < 15 ? 'low' : p > 80 ? 'high' : 'optimal',
-      recommendation: p < 15 ? 'Apply phosphate fertilizer or bone meal.' : p > 80 ? 'Avoid additional P applications this season.' : 'Phosphorus is at a healthy level.',
+      status: p < 15 ? "low" : p > 80 ? "high" : "optimal",
+      recommendation:
+        p < 15
+          ? "Apply phosphate fertilizer or bone meal."
+          : p > 80
+            ? "Avoid additional P applications this season."
+            : "Phosphorus is at a healthy level.",
     },
     {
-      label: 'Potassium (K)',
+      label: "Potassium (K)",
       value: `${k} mg/kg`,
-      status: k < 20 ? 'low' : k > 150 ? 'high' : 'optimal',
-      recommendation: k < 20 ? 'Add potash fertilizer or wood ash.' : k > 150 ? 'Monitor potassium to avoid toxicity.' : 'Potassium is at an adequate level.',
+      status: k < 20 ? "low" : k > 150 ? "high" : "optimal",
+      recommendation:
+        k < 20
+          ? "Add potash fertilizer or wood ash."
+          : k > 150
+            ? "Monitor potassium to avoid toxicity."
+            : "Potassium is at an adequate level.",
     },
     {
-      label: 'pH Level',
+      label: "pH Level",
       value: ph.toFixed(1),
-      status: ph < 5.5 ? 'low' : ph > 7.5 ? 'high' : 'optimal',
-      recommendation: ph < 5.5 ? 'Apply agricultural lime to raise pH.' : ph > 7.5 ? 'Add sulfur or acidifying fertilizers.' : 'pH is in the ideal range for most crops.',
+      status: ph < 5.5 ? "low" : ph > 7.5 ? "high" : "optimal",
+      recommendation:
+        ph < 5.5
+          ? "Apply agricultural lime to raise pH."
+          : ph > 7.5
+            ? "Add sulfur or acidifying fertilizers."
+            : "pH is in the ideal range for most crops.",
     },
     {
-      label: 'Moisture',
+      label: "Moisture",
       value: `${moisture}%`,
-      status: moisture < 25 ? 'low' : moisture > 70 ? 'high' : 'optimal',
-      recommendation: moisture < 25 ? 'Irrigate and consider mulching to retain moisture.' : moisture > 70 ? 'Improve drainage to prevent waterlogging.' : 'Moisture levels are well-suited for plant growth.',
+      status: moisture < 25 ? "low" : moisture > 70 ? "high" : "optimal",
+      recommendation:
+        moisture < 25
+          ? "Irrigate and consider mulching to retain moisture."
+          : moisture > 70
+            ? "Improve drainage to prevent waterlogging."
+            : "Moisture levels are well-suited for plant growth.",
     },
   ];
 }
 
 const statusConfig = {
-  low: { color: '#dc2626', bg: 'rgba(220,38,38,0.08)', border: 'rgba(220,38,38,0.2)', icon: TrendingDown, label: 'Low' },
-  optimal: { color: '#16a34a', bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.2)', icon: CheckCircle2, label: 'Optimal' },
-  high: { color: '#d97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.2)', icon: TrendingUp, label: 'High' },
+  low: {
+    color: "#dc2626",
+    bg: "rgba(220,38,38,0.08)",
+    border: "rgba(220,38,38,0.2)",
+    icon: TrendingDown,
+    label: "Low",
+  },
+  optimal: {
+    color: "#16a34a",
+    bg: "rgba(22,163,74,0.08)",
+    border: "rgba(22,163,74,0.2)",
+    icon: CheckCircle2,
+    label: "Optimal",
+  },
+  high: {
+    color: "#d97706",
+    bg: "rgba(217,119,6,0.08)",
+    border: "rgba(217,119,6,0.2)",
+    icon: TrendingUp,
+    label: "High",
+  },
 };
 
 export default function SoilPage() {
@@ -136,14 +195,16 @@ export default function SoilPage() {
   const [note, setNote] = useState("");
   const [hausaNote, setHausaNote] = useState("");
   const [overallScore, setOverallScore] = useState<number | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>(
+    {},
+  );
 
   const handleChange = (key: keyof SoilForm, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    
+
     // Real-time validation
     const errorMsg = validateField(value, SOIL_VALIDATION_RULES[key]);
-    setFieldErrors(prev => ({ ...prev, [key]: errorMsg }));
+    setFieldErrors((prev) => ({ ...prev, [key]: errorMsg }));
 
     if (error) setError(null);
     if (apiResult || metrics) {
@@ -168,15 +229,15 @@ export default function SoilPage() {
     setMetrics(null);
 
     const values = Object.values(form);
-    if (values.some((v) => v.trim() === '')) {
-      setError('Please fill in all fields before submitting.');
+    if (values.some((v) => v.trim() === "")) {
+      setError("Please fill in all fields before submitting.");
       return;
     }
 
     // Check for validation errors
     const currentErrors: Record<string, string | null> = {};
     let hasErrors = false;
-    (Object.keys(form) as Array<keyof SoilForm>).forEach(key => {
+    (Object.keys(form) as Array<keyof SoilForm>).forEach((key) => {
       const err = validateField(form[key], SOIL_VALIDATION_RULES[key]);
       if (err) {
         currentErrors[key] = err;
@@ -186,12 +247,12 @@ export default function SoilPage() {
 
     if (hasErrors) {
       setFieldErrors(currentErrors);
-      setError('Please fix the errors in the form.');
+      setError("Please fix the errors in the form.");
       return;
     }
 
     setLoading(true);
-    
+
     // Simulate backend processing delay
     setTimeout(() => {
       try {
@@ -208,18 +269,26 @@ export default function SoilPage() {
         setHausaNote(data.hausaNote);
         setMetrics(data.metrics);
         setOverallScore(data.overallScore || 0);
-        
+
         setLoading(false);
         setModalOpen(true);
       } catch (err: unknown) {
         setLoading(false);
-        setError(err instanceof Error ? err.message : 'Analysis failed. Please check your inputs.');
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Analysis failed. Please check your inputs.",
+        );
       }
     }, 1500);
   };
 
   const overallScoreValue = metrics
-    ? Math.round((metrics.filter((m) => m.status === 'optimal').length / metrics.length) * 100)
+    ? Math.round(
+        (metrics.filter((m) => m.status === "optimal").length /
+          metrics.length) *
+          100,
+      )
     : null;
 
   return (
@@ -408,8 +477,12 @@ export default function SoilPage() {
                         width: "100%",
                         padding: "10px 14px",
                         borderRadius: 9,
-                        border: `1.5px solid ${fieldErrors[field.key] ? "#ef4444" : (form[field.key] ? "rgba(13,148,136,0.35)" : "rgba(13,148,136,0.15)")}`,
-                        backgroundColor: fieldErrors[field.key] ? "rgba(239,68,68,0.02)" : (form[field.key] ? "rgba(13,148,136,0.03)" : "#fff"),
+                        border: `1.5px solid ${fieldErrors[field.key] ? "#ef4444" : form[field.key] ? "rgba(13,148,136,0.35)" : "rgba(13,148,136,0.15)"}`,
+                        backgroundColor: fieldErrors[field.key]
+                          ? "rgba(239,68,68,0.02)"
+                          : form[field.key]
+                            ? "rgba(13,148,136,0.03)"
+                            : "#fff",
                         fontSize: 14,
                         color: "#1a2e2c",
                         outline: "none",
@@ -418,12 +491,30 @@ export default function SoilPage() {
                       }}
                     />
                     {fieldErrors[field.key] ? (
-                      <p style={{ fontSize: 11, color: "#ef4444", marginTop: 4, margin: "4px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: "#ef4444",
+                          marginTop: 4,
+                          margin: "4px 0 0",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
                         <AlertCircle size={10} />
                         {fieldErrors[field.key]}
                       </p>
                     ) : (
-                      <p style={{ fontSize: 11, color: "#5a9c93", margin: "4px 0 0" }}>{field.hint}</p>
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: "#5a9c93",
+                          margin: "4px 0 0",
+                        }}
+                      >
+                        {field.hint}
+                      </p>
                     )}
                   </div>
                 ))}
@@ -630,7 +721,8 @@ export default function SoilPage() {
                 style={{ display: "flex", flexDirection: "column", gap: 12 }}
               >
                 {metrics.map((metric) => {
-                  const cfg = statusConfig[metric.status as keyof typeof statusConfig];
+                  const cfg =
+                    statusConfig[metric.status as keyof typeof statusConfig];
                   const Icon = cfg.icon;
                   return (
                     <div
@@ -752,6 +844,8 @@ export default function SoilPage() {
         cropDetails={null}
       />
       <ProcessingOverlay open={loading} type="soil" />
+      {/* Chatbot */}
+      <Chatbot />
     </div>
   );
 }
