@@ -6,7 +6,7 @@ export function AnalysisSummary({
   note,
   hausaNote,
   style,
-  onSpeak
+  onSpeak,
 }: {
   note: string;
   hausaNote?: string;
@@ -24,21 +24,37 @@ export function AnalysisSummary({
         border: `1px solid ${style.border}`,
         borderRadius: 16,
         padding: 24,
-        height: "100%"
+        height: "100%",
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 12,
+        }}
+      >
         <Languages size={18} color={style.text} />
-        <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: style.text }}>AI Analysis Summary</h4>
+        <h4
+          style={{
+            margin: 0,
+            fontSize: 15,
+            fontWeight: 700,
+            color: style.text,
+          }}
+        >
+          AI Analysis Summary
+        </h4>
       </div>
-      
+
       <p
         style={{
           fontSize: 15,
           color: style.text,
           margin: 0,
           lineHeight: 1.6,
-          fontWeight: 500
+          fontWeight: 500,
         }}
       >
         {note}
@@ -49,9 +65,9 @@ export function AnalysisSummary({
           onClick={() => onSpeak(note, "en-US")}
           style={{
             flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             gap: 8,
             padding: "12px",
             borderRadius: 12,
@@ -61,22 +77,30 @@ export function AnalysisSummary({
             fontWeight: 600,
             cursor: "pointer",
             fontSize: 14,
-            transition: 'all 0.2s',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            transition: "all 0.2s",
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
           }}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#1e293b')}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#0f172a')}
+          onMouseOver={(e) =>
+            (e.currentTarget.style.backgroundColor = "#1e293b")
+          }
+          onMouseOut={(e) =>
+            (e.currentTarget.style.backgroundColor = "#0f172a")
+          }
         >
           <Volume2 size={16} /> Listen English
         </button>
 
         <button
-          onClick={() => onSpeak(hausaNote || note, "ha-NG")}
+          onClick={() => {
+            if (!hausaNote) return;
+            onSpeak(hausaNote, "ha-NG");
+          }}
           style={{
             flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             gap: 8,
             padding: "12px",
             borderRadius: 12,
@@ -85,10 +109,14 @@ export function AnalysisSummary({
             fontWeight: 600,
             cursor: "pointer",
             fontSize: 14,
-            transition: 'all 0.2s'
+            transition: "all 0.2s",
           }}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#e2e8f0')}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+          onMouseOver={(e) =>
+            (e.currentTarget.style.backgroundColor = "#e2e8f0")
+          }
+          onMouseOut={(e) =>
+            (e.currentTarget.style.backgroundColor = "#f1f5f9")
+          }
         >
           <Languages size={16} /> Saurara (Hausa)
         </button>
