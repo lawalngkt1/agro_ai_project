@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import { MessageCircle, X, Send } from "lucide-react";
@@ -16,6 +16,7 @@ const botReplies = [
   "For best yield, apply nitrogen fertilizer in split doses 🌿",
 ];
 
+
 function getBotReply(input: string) {
   const lower = input.toLowerCase();
 
@@ -29,6 +30,7 @@ function getBotReply(input: string) {
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "bot",
@@ -38,13 +40,14 @@ export default function Chatbot() {
   const [input, setInput] = useState("");
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
-    const userMsg = { role: "user", content: input };
+    const userText = input;
 
-    setMessages((prev) => [...prev, { role: "user", text: input }]);
+    setMessages((prev) => [...prev, { role: "user", text: userText }]);
 
     setInput("");
+    setLoading(true);
 
     try {
       const res = await fetch("/api/chat", {
@@ -56,7 +59,7 @@ export default function Chatbot() {
               role: m.role,
               content: m.text,
             })),
-            userMsg,
+            { role: "user", content: userText },
           ],
         }),
       });
@@ -69,9 +72,35 @@ export default function Chatbot() {
         ...prev,
         {
           role: "bot",
-          text: "Sorry, I couldn't process that request.",
+          text: "Unable to process request right now.",
         },
       ]);
+    } finally {
+      setLoading(false);
+    }
+
+    {
+      loading && (
+        <div
+          style={{
+            alignSelf: "flex-start",
+            background: "#fff",
+            padding: "10px 12px",
+            borderRadius: 12,
+            fontSize: 13,
+            color: "#4b7a59",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+            display: "flex",
+            gap: 6,
+            alignItems: "center",
+          }}
+        >
+          <span style={{ animation: "pulse 1s infinite" }}>
+            AgroAI is thinking
+          </span>
+          <span>...</span>
+        </div>
+      );
     }
   };
 
@@ -162,10 +191,7 @@ export default function Chatbot() {
                 key={i}
                 style={{
                   alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                  background:
-                    msg.role === "user"
-                      ? "#16a34a"
-                      : "#ffffff",
+                  background: msg.role === "user" ? "#16a34a" : "#ffffff",
                   color: msg.role === "user" ? "#fff" : "#14532d",
                   padding: "10px 12px",
                   borderRadius: 12,
@@ -194,7 +220,10 @@ export default function Chatbot() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about crops, soil..."
+              disabled={loading}
+              placeholder={
+                loading ? "Waiting for response..." : "Ask about crops, soil..."
+              }
               style={{
                 flex: 1,
                 padding: 10,
@@ -202,19 +231,22 @@ export default function Chatbot() {
                 border: "1px solid rgba(22,163,74,0.2)",
                 outline: "none",
                 fontSize: 13,
+                opacity: loading ? 0.6 : 1,
               }}
             />
 
             <button
               onClick={sendMessage}
+              disabled={loading}
               style={{
                 marginLeft: 8,
-                background: "#16a34a",
+                background: loading ? "#86efac" : "#16a34a",
                 border: "none",
                 borderRadius: 10,
                 padding: "10px 12px",
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 color: "#fff",
+                opacity: loading ? 0.6 : 1,
               }}
             >
               <Send size={16} />
